@@ -1,0 +1,243 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{51499089-7A44-4C42-B1FB-42CA9D933BED}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>FallingBoxes</RootNamespace>
+    <ProjectName>Contact Playground</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\Dependencies;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\Dependencies;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\Dependencies;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\Dependencies;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Dependencies\bullet3-2.83.7\src;$(ProjectDir)..\..\Dependencies\caffe-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Dependencies\freeglut;$(ProjectDir)..\..\Dependencies\glew;$(ProjectDir)..\..\Dependencies\SOIL\lib;$(ProjectDir)..\..\Dependencies\glui\mdd_debug;$(ProjectDir)..\..\Dependencies\caffe-windows\libs\debug\32b;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;freeglut.lib;glew32.lib;SOIL.lib;glui32.lib;hdf5.lib;hdf5_hl.lib;opencv_calib3d2410d.lib;opencv_contrib2410d.lib;opencv_highgui2410d.lib;opencv_features2d2410d.lib;opencv_core2410d.lib;opencv_legacy2410d.lib;opencv_imgproc2410d.lib;opencv_ml2410d.lib;opencv_photo2410d.lib;gflagsd.lib;gflags_nothreadsd.lib;leveldb.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;lmdb.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>Enabled</ForceFileOutput>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_LIB;_ITERATOR_DEBUG_LEVEL=2;_SCL_SECURE_NO_WARNINGS;BOOST_REGEX_NO_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Dependencies\bullet3-2.83.7\src;$(ProjectDir)..\..\Dependencies\caffe-windows\include;$(ProjectDir)..\..\Dependencies\NugetPackages\boost.1.59.0.0\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\gflags.2.1.2.1\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\glog.0.3.3.0\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\hdf5-v120-complete.1.8.15.2\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\lmdb-v120-clean.0.9.14.0\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\OpenBLAS.0.2.14.1\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\protobuf-v120.2.6.1\build\native\include;$(ProjectDir)..\..\Dependencies\sqlite;$(ProjectDir)..\..\Dependencies\dirent;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Dependencies\freeglut;$(ProjectDir)..\..\Dependencies\glew;$(ProjectDir)..\..\Dependencies\SOIL\lib;$(ProjectDir)..\..\Dependencies\glui\mdd_debug;$(ProjectDir)..\..\Dependencies\caffe-windows\libs\Debug\x64;$(ProjectDir)..\..\Dependencies\sqlite\sqlite;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;freeglut.lib;glew32.lib;SOIL.lib;glui32.lib;hdf5.lib;hdf5_hl.lib;opencv_calib3d2410d.lib;opencv_contrib2410d.lib;opencv_highgui2410d.lib;opencv_features2d2410d.lib;opencv_core2410d.lib;opencv_legacy2410d.lib;opencv_imgproc2410d.lib;opencv_ml2410d.lib;opencv_photo2410d.lib;gflagsd.lib;gflags_nothreadsd.lib;leveldb.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;lmdb.lib;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>Enabled</ForceFileOutput>
+    </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Dependencies\SOIL\src;$(ProjectDir)..\..\Dependencies\bullet3-2.83.7\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Dependencies\freeglut;$(ProjectDir)..\..\Dependencies\SOIL\lib;$(ProjectDir)..\..\Dependencies\glew;$(ProjectDir)..\..\Dependencies\glui;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;freeglut.lib;glew32.lib;SOIL.lib;glui32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE_NO_WARNINGS;BOOST_REGEX_NO_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Dependencies\SOIL\src;$(ProjectDir)..\..\Dependencies\bullet3-2.83.7\src;$(ProjectDir)..\..\Dependencies\caffe-windows\include;$(ProjectDir)..\..\Dependencies\NugetPackages\boost.1.59.0.0\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\gflags.2.1.2.1\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\glog.0.3.3.0\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\hdf5-v120-complete.1.8.15.2\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\lmdb-v120-clean.0.9.14.0\lib\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\protobuf-v120.2.6.1\build\native\include;$(ProjectDir)..\..\Dependencies\NugetPackages\OpenBLAS.0.2.14.1\lib\native\include;$(ProjectDir)..\..\Dependencies\dirent;$(ProjectDir)..\..\Dependencies\sqlite;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Dependencies\freeglut;$(ProjectDir)..\..\Dependencies\SOIL\lib;$(ProjectDir)..\..\Dependencies\glew;$(ProjectDir)..\..\Dependencies\glui\release;$(ProjectDir)..\..\Dependencies\caffe-windows\libs\Release\x64;$(ProjectDir)..\..\Dependencies\sqlite\sqlite;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;freeglut.lib;glew32.lib;SOIL.lib;glui32.lib;hdf5.lib;hdf5_hl.lib;opencv_calib3d2410d.lib;opencv_contrib2410d.lib;opencv_highgui2410d.lib;opencv_features2d2410d.lib;opencv_core2410d.lib;opencv_legacy2410d.lib;opencv_imgproc2410d.lib;opencv_ml2410d.lib;opencv_photo2410d.lib;gflags_static.lib;gflags_nothreads_static.lib;shlwapi.lib;leveldb.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;lmdb.lib;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>Enabled</ForceFileOutput>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BulletOpenGLApplication.h" />
+    <ClInclude Include="CameraManager.h" />
+    <ClInclude Include="CollideeObject.h" />
+    <ClInclude Include="ColliderObject.h" />
+    <ClInclude Include="ColliderVertex.h" />
+    <ClInclude Include="Constants.h" />
+    <ClInclude Include="ContactCollisionDispatcher.h" />
+    <ClInclude Include="ContactLearningApp.h" />
+    <ClInclude Include="ContactManager.h" />
+    <ClInclude Include="DebugDrawer.h" />
+    <ClInclude Include="FreeGLUTCallbacks.h" />
+    <ClInclude Include="Gains.h" />
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="OpenGLMotionState.h" />
+    <ClInclude Include="RagDoll.h" />
+    <ClInclude Include="State.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="TerrainCreator.h" />
+    <ClInclude Include="WalkingController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BulletOpenGLApplication.cpp" />
+    <ClCompile Include="CameraManager.cpp" />
+    <ClCompile Include="CollideeObject.cpp" />
+    <ClCompile Include="ColliderObject.cpp" />
+    <ClCompile Include="ColliderVertex.cpp" />
+    <ClCompile Include="Constants.cpp" />
+    <ClCompile Include="ContactCollisionDispatcher.cpp" />
+    <ClCompile Include="ContactLearning.cpp" />
+    <ClCompile Include="ContactLearningApp.cpp" />
+    <ClCompile Include="ContactManager.cpp" />
+    <ClCompile Include="DebugDrawer.cpp" />
+    <ClCompile Include="Gains.cpp" />
+    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="RagDoll.cpp" />
+    <ClCompile Include="State.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TerrainCreator.cpp" />
+    <ClCompile Include="WalkingController.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\Dependencies\Resources\checkerboard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Dependencies\bullet3-2.83.7-lab\src\BulletCollision\BulletCollision.vcxproj">
+      <Project>{275b4aea-98fe-49dc-9ea5-d18d4bce725e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Dependencies\bullet3-2.83.7-lab\src\BulletDynamics\BulletDynamics.vcxproj">
+      <Project>{de35cc0d-99d6-47af-abb9-4224ba4ba1f6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Dependencies\bullet3-2.83.7-lab\src\LinearMath\LinearMath.vcxproj">
+      <Project>{d2b677c2-917f-410a-8e73-cee0ce359a58}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Dependencies\caffe-windows\windows\libcaffe\libcaffe.vcxproj">
+      <Project>{a9acef83-7b63-4574-a554-89ce869ea141}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
