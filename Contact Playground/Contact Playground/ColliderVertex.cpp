@@ -19,7 +19,7 @@ ColliderVertex::~ColliderVertex()
 {
 }
 
-void ColliderVertex::CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject> &objects) {
+void ColliderVertex::CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject *> &objects) {
 
 	if (!m_object) {
 		return;
@@ -50,19 +50,19 @@ void ColliderVertex::CollisionDetectionUpdate(std::unordered_map<GameObject *, C
 
 }
 
-void ColliderVertex::ManageCollision(std::unordered_map<GameObject *, CollideeObject> &objects) {
+void ColliderVertex::ManageCollision(std::unordered_map<GameObject *, CollideeObject *> &objects) {
 
 	for (auto kv : objects) {
-		CollideeObject object = kv.second;
+		CollideeObject* object = kv.second;
 
-		if (object.m_object == m_contactObject) {
+		if (object->m_object == m_contactObject) {
 
-			m_friction = object.GetFriction();
+			m_friction = object->GetFriction();
 
 			m_minAngle = -atan(m_friction);
 			m_maxAngle = atan(m_friction);
 
-			switch (object.m_shapeType) {
+			switch (object->m_shapeType) {
 			case COLLIDEE_BOX_SHAPE: {
 				//  Only implementing TOP plane for now..
 				/*auto planes = object.GetPlanes();
@@ -71,12 +71,12 @@ void ColliderVertex::ManageCollision(std::unordered_map<GameObject *, CollideeOb
 			}
 				break;
 			case COLLIDEE_BOX_2D_SHAPE: {
-				auto planes = object.GetPlanes();
+				auto planes = object->GetPlanes();
 				Handle2DBoxCollision(planes);
 			}
 				break;
 			case COLLIDEE_CIRCLE_SHAPE: {
-				HandleCircleCollision(object.GetCenter(), object.GetRadius());
+				HandleCircleCollision(object->GetCenter(), object->GetRadius());
 			}
 				break;
 			default:
@@ -88,20 +88,20 @@ void ColliderVertex::ManageCollision(std::unordered_map<GameObject *, CollideeOb
 
 }
 
-void ColliderVertex::CheckForCollision(std::unordered_map<GameObject *, CollideeObject> &objects) {
+void ColliderVertex::CheckForCollision(std::unordered_map<GameObject *, CollideeObject *> &objects) {
 	
-	std::unordered_map<GameObject *, CollideeObject>::iterator kv;
+	std::unordered_map<GameObject *, CollideeObject *>::iterator kv;
 
 	//printf("num of objects = %d\n", objects.size());
 
 	for (kv = objects.begin(); kv != objects.end(); kv ++) {
-		CollideeObject& object = kv->second;
-		m_friction = object.GetFriction();
+		CollideeObject* object = kv->second;
+		m_friction = object->GetFriction();
 
 		m_minAngle = -atan(m_friction);
 		m_maxAngle = atan(m_friction);
 
-		switch (object.m_shapeType)
+		switch (object->m_shapeType)
 		{
 		case COLLIDEE_BOX_SHAPE: {
 			//  Only implementing TOP plane for now..
@@ -111,20 +111,20 @@ void ColliderVertex::CheckForCollision(std::unordered_map<GameObject *, Collidee
 		}
 			break;
 		case COLLIDEE_BOX_2D_SHAPE: {
-			auto planes = object.GetPlanes();
+			auto planes = object->GetPlanes();
 			Handle2DBoxCollision(planes);
 		}
 			break;
 		case COLLIDEE_CIRCLE_SHAPE: {
-			HandleCircleCollision(object.GetCenter(), object.GetRadius());
+			HandleCircleCollision(object->GetCenter(), object->GetRadius());
 		}
 			break;
 		default:
 			break;
 		}
 		if (m_state == IN_COLLISION) {
-			m_contactObject = object.m_object;
-			m_collideeObject = &kv->second;
+			m_contactObject = object->m_object;
+			m_collideeObject = kv->second;
 			break;
 		}
 	}
@@ -144,14 +144,18 @@ CollideeObject *ColliderVertex::GetCollidingObject() {
 	
 }
 
+void ColliderVertex::RemoveReactionForce() {
+	m_reactionForce = btVector3(0, 0, 0);
+}
+
 #pragma region HANDLERS
 
-void ColliderVertex::HandleBoxCollision(CollideeObject& cObj) {
+void ColliderVertex::HandleBoxCollision(CollideeObject* cObj) {
 	// Get the location of the vertex with respect to the objects coordinates
-	btVector3 relPos = cObj.m_object->GetRigidBody()->getCenterOfMassTransform().inverse()(m_vertexPos);
-	btVector3 prevRelPos = cObj.m_object->GetRigidBody()->getCenterOfMassTransform().inverse()(m_previousPoint);
+	btVector3 relPos = cObj->m_object->GetRigidBody()->getCenterOfMassTransform().inverse()(m_vertexPos);
+	btVector3 prevRelPos = cObj->m_object->GetRigidBody()->getCenterOfMassTransform().inverse()(m_previousPoint);
 
-	auto planes = cObj.GetRelativePlanes();
+	auto planes = cObj->GetRelativePlanes();
 
 	auto topPlane = planes.at(0);
 	auto leftPlane = planes.at(1);
@@ -192,7 +196,7 @@ void ColliderVertex::HandleBoxCollision(CollideeObject& cObj) {
 				btTransform tr;
 				tr.setIdentity();
 
-				btQuaternion rotation = cObj.m_object->GetRigidBody()->getWorldTransform().getRotation();
+				btQuaternion rotation = cObj->m_object->GetRigidBody()->getWorldTransform().getRotation();
 
 				tr.setRotation(rotation);
 				btVector3 relVel = tr.inverse()(m_vertexVel);

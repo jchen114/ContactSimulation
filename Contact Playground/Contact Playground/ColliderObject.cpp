@@ -45,7 +45,7 @@ void ColliderObject::Initialize2DBox(int numberOfVertices) {
 }
 
 
-void ColliderObject::CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject> &collidees) {
+void ColliderObject::CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject*> &collidees) {
 
 	for (auto it = m_vertices.begin(); it != m_vertices.end(); it++) {
 		ColliderVertex* vertex = *it;
@@ -130,6 +130,13 @@ void ColliderObject::GetCollidingGameObjects(std::set<GameObject *> &collidingOb
 
 }
 
+void ColliderObject::RemoveForces()	{
+
+	for (auto vertex : m_vertices) {
+		vertex->RemoveReactionForce();
+	}
+
+}
 
 #pragma endregion INTERFACE
 
@@ -141,7 +148,7 @@ void ColliderObject::DrawAndLabelContactPoints() {
 	for (auto it = m_vertices.begin(); it != m_vertices.end(); it++) {
 		ColliderVertex *vertex = *it;
 		vertex->DrawInfo();
-		//vertex->DrawForce();
+		vertex->DrawForce();
 	}
 
 }

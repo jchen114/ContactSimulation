@@ -14,7 +14,9 @@ public:
 		float mass,
 		const btVector3 &color,
 		const btVector3 &initialPosition = btVector3(0, 0, 0),
-		const btQuaternion &initialRotation = btQuaternion(0, 0, 0, 1));
+		std::string name = "Object",
+		const btQuaternion &initialRotation = btQuaternion(0, 0, 0, 1)
+		);
 	~GameObject();
 
 	void Reposition(const btVector3 &position, const btQuaternion &orientation = btQuaternion(0, 0, 0, 1));
@@ -110,6 +112,8 @@ public:
 			(*it)->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
 		}
 	}
+
+	std::string m_name;
 
 protected:
 	btCollisionShape *m_pShape;

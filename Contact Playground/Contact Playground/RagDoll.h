@@ -26,9 +26,11 @@ public:
 
 	void ConfigureContactModel();
 
-	GameObject *Create2DBox(const btVector3 &halfSize, float mass, const btVector3 &color, const btVector3 &position);
+	GameObject *Create2DBox(const btVector3 &halfSize, float mass, const btVector3 &color, const btVector3 &position, std::string name="Object");
 
 	void Loop();
+	void AddCollisionWithGround(GameObject *ground);
+	void RemoveCollisionWithGround(GameObject *ground);
 
 	// Rag Doll model
 	GameObject *m_torso;
@@ -92,6 +94,8 @@ public:
 	bool DrawShape(btScalar *transform, const btCollisionShape *pShape, const btVector3 &color);
 
 	std::function<void()> m_ResetCallback;
+	
+	bool m_disabled = true;
 
 private:
 

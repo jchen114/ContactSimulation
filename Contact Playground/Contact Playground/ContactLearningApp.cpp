@@ -87,6 +87,8 @@ void ContactLearningApp::InitializePhysics() {
 
 	LoadTextures();
 
+	m_collisionClock.reset();
+
 }
 
 void ContactLearningApp::Idle() {
@@ -112,7 +114,7 @@ void ContactLearningApp::LoadTextures() {
 
 void ContactLearningApp::CreateGround(const btVector3 &pos) {
 	// Create 3D ground.
-	GameObject *ground = CreateGameObject(new btBoxShape(btVector3(GROUND_WIDTH, GROUND_HEIGHT, GROUND_DEPTH)), 0, btVector3(1.0f, 1.0f, 1.0f), btVector3(0,0,0));
+	GameObject *ground = CreateGameObject(new btBoxShape(btVector3(GROUND_WIDTH, GROUND_HEIGHT, GROUND_DEPTH)), 0, btVector3(1.0f, 1.0f, 1.0f), btVector3(0,0,0), "Ground init");
 	ground->GetShape()->setUserPointer((uintptr_t) GROUND);
 	ContactManager::GetInstance().AddObjectToCollideWith(ground);
 
@@ -184,7 +186,7 @@ void ContactLearningApp::ManageGroundCollisions() {
 			}
 			else {
 				m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
-				ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 7.0f);
+				ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
 			}
 		}
 		if (m_collisionGrounds.size() > 3) {
@@ -208,7 +210,7 @@ void ContactLearningApp::Reset() {
 
 	for (m_ground_idx = 0; m_ground_idx < 3; m_ground_idx++) {
 		m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
-		ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 5.0f);
+		ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
 	}
 
 	ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(0));
@@ -308,6 +310,21 @@ void ContactLearningApp::DrawCallback() {
 }
 
 void ContactLearningApp::PostTickCallback(btScalar timestep) {
+
+
+	if (m_collisionClock.getTimeMilliseconds() > 10) {
+		for (auto ground : m_collisionGrounds) {
+			btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
+			btVector3 relPos = tr(m_ragDoll->GetLocation());
+			if (relPos.x() > -GROUND_WIDTH - 1.0f && relPos.x() < GROUND_WIDTH + 1.0f) {
+				m_ragDoll->AddCollisionWithGround(ground);
+			}
+			else {
+				m_ragDoll->RemoveCollisionWithGround(ground);
+			}
+		}
+		m_collisionClock.reset();
+	}
 
 	// Check for collisions
 	m_ragDoll->RagDollCollision(timestep, m_pWorld, m_collisionGrounds);

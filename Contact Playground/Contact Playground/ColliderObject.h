@@ -31,10 +31,11 @@ public:
 	std::vector<ColliderVertex *> m_vertices;
 
 	void DrawAndLabelContactPoints();
+	void RemoveForces();
 
 	void *m_userPointer;
 
-	void CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject> &collidees);
+	void CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject *> &collidees);
 
 	std::vector<ColliderVertex *> GetVertexPositionsFor2DBox(const btVector3 &halfSize, int numberOfVertices);
 	std::vector<btVector3> GetVertexVelocitiesFor2DBox(btRigidBody *body, const btVector3 &halfSize);

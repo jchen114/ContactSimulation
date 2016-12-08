@@ -129,6 +129,7 @@ public:
 		const float &mass,
 		const btVector3 &color = btVector3(1.0f, 1.0f, 1.0f),
 		const btVector3 &initialPosition = btVector3(0.0f, 0.0f, 0.0f),
+		std::string name = "Object",
 		const btQuaternion &initialRotation = btQuaternion(0, 0, 0, 1)
 		);
 

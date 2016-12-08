@@ -62,8 +62,22 @@ void ContactManager::GetCollideesForObject(ColliderObject *objQ, std::set<Collid
 
 void ContactManager::GetCollidingGameObjectsForObject(ColliderObject *objQ, std::set<GameObject *> &gameObjects) {
 	objQ->GetCollidingGameObjects(gameObjects);
+
+	/*if (gameObjects.empty()) {
+		RemoveCollisionPair(objQ->m_object);
+	}*/
+
 }
 
+void ContactManager::Reset() {
+
+	// Remove all the forces that are felt by the colliders
+	std::unordered_map<GameObject *, ColliderObject>::const_iterator iter;
+	for (iter = m_forCollision.begin(); iter != m_forCollision.end(); iter++) {
+		ColliderObject collider = iter->second;
+		collider.RemoveForces();
+	}
+}
 
 #pragma endregion CONTACT_INTERFACE
 
@@ -87,19 +101,44 @@ void ContactManager::Update(btScalar timestep) {
 
 	for (auto it = m_forCollision.begin(); it != m_forCollision.end(); it++) {
 		ColliderObject& colliderObject = it->second;
-		colliderObject.CollisionDetectionUpdate(m_toCollideWith);
+
+		auto collisionPairIter = m_collisionPairs.find(colliderObject.m_object);
+		if (collisionPairIter != m_collisionPairs.end()) {
+			std::set<GameObject*> collidees = collisionPairIter->second;
+
+			std::unordered_map<GameObject *, CollideeObject *> c_map;
+
+			for (auto it : collidees) {
+				CollideeObject *cObj = &m_toCollideWith.find(it)->second;
+				c_map.insert({ it, cObj });
+			}
+
+			colliderObject.CollisionDetectionUpdate(c_map);
+		}
+		
 	}
 
 }
 
-void ContactManager::AddCollisionPair(GameObject *obj1, GameObject *obj2) {
+void ContactManager::AddCollisionPair(GameObject * obj_collider, GameObject * obj_collidee) {
 
-	m_collisionPairs.insert({ obj1, obj2 });
+	auto iter = m_collisionPairs.find(obj_collider);
+
+	if (iter != m_collisionPairs.end()) {
+		iter->second.insert(obj_collidee);
+	}
+	else {
+		m_collisionPairs.insert({ obj_collider, std::set<GameObject*> { obj_collidee } });
+	}
 
 }
 
-void ContactManager::RemoveCollisionPair(GameObject *obj) {
+void ContactManager::RemoveCollisionPair(GameObject * obj_collider, GameObject *obj_collidee) {
 
-	m_collisionPairs.erase(obj);
+	auto iter = m_collisionPairs.find(obj_collider);
+
+	if (iter != m_collisionPairs.end()) {
+		iter->second.erase(obj_collidee);
+	}
 
 }

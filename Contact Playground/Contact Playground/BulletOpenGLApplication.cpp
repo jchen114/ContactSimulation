@@ -625,9 +625,11 @@ GameObject* BulletOpenGLApplication::CreateGameObject(
 	const float &mass,
 	const btVector3 &color,
 	const btVector3 &initialPosition,
-	const btQuaternion &initialRotation) {
+	std::string name,
+	const btQuaternion &initialRotation
+	) {
 
-	GameObject* pObject = new GameObject(pShape, mass, color, initialPosition, initialRotation);
+	GameObject* pObject = new GameObject(pShape, mass, color, initialPosition, name, initialRotation );
 	// push it to the back of the list
 
 	return AddGameObject(pObject);

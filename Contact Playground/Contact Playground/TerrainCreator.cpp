@@ -39,7 +39,7 @@ std::vector<GameObject *> TerrainCreator::CreateTerrains(const btVector3 &startP
 
 	// First slab..
 	double length = m_distribution(m_generator);
-	GameObject *slab0 = new GameObject(new btBoxShape(btVector3(length, m_height, m_depth)), 0.0f, btVector3(0.0f, 1.0f, 0.0f), startPoint + btVector3(length, 0, 0));
+	GameObject *slab0 = new GameObject(new btBoxShape(btVector3(length, m_height, m_depth)), 0.0f, btVector3(0.0f, 1.0f, 0.0f), startPoint + btVector3(length, 0, 0), "Ground Up");
 
 	btTransform tr;
 	// Rising plane
@@ -57,13 +57,13 @@ std::vector<GameObject *> TerrainCreator::CreateTerrains(const btVector3 &startP
 	slab0->GetRigidBody()->getMotionState()->getWorldTransform(tr);
 	btVector3 endpt = tr(btVector3(length, 0, 0));
 	// Flat plane
-	GameObject *slab1 = new GameObject(new btBoxShape(btVector3(length, m_height, m_depth)), 0.0f, btVector3(0.0f, 0.0f, 1.0f), endpt + btVector3(length, 0, 0));
+	GameObject *slab1 = new GameObject(new btBoxShape(btVector3(length, m_height, m_depth)), 0.0f, btVector3(0.0f, 0.0f, 1.0f), endpt + btVector3(length, 0, 0), "Ground Flat");
 	slabs.push_back(slab1);
 
 	slab1->GetRigidBody()->getMotionState()->getWorldTransform(tr);
 	endpt = tr(btVector3(length, 0, 0));
 	// Falling Plane
-	GameObject *slab2 = new GameObject(new btBoxShape(btVector3(length, m_height, m_depth)), 0.0f, btVector3(1.0f, 0.0f, 1.0f), endpt + btVector3(length, 0, 0));
+	GameObject *slab2 = new GameObject(new btBoxShape(btVector3(length, m_height, m_depth)), 0.0f, btVector3(1.0f, 0.0f, 1.0f), endpt + btVector3(length, 0, 0), "Ground Down");
 
 	slab2->GetRigidBody()->getMotionState()->getWorldTransform(tr);
 	tr.setRotation(btQuaternion(btVector3(0, 0, 1), -rotation_angle));

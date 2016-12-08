@@ -75,6 +75,8 @@ private:
 	int m_ground_idx;
 	std::deque<GameObject *> m_collisionGrounds;
 
+	btClock m_collisionClock;
+
 };
 
 void InternalPostTickCallback(btDynamicsWorld *world, btScalar timestep);

@@ -24,15 +24,17 @@ public:
 	ColliderVertex(GameObject *object, const btVector3 &offset, int vid);
 	~ColliderVertex();
 
-	void CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject> &objects);
+	void CollisionDetectionUpdate(std::unordered_map<GameObject *, CollideeObject *> &objects);
 
-	btScalar m_springConstant = 5000.0f;
-	btScalar m_dampingConstant = 500.0f;
+	btScalar m_springConstant = 2000.0f;
+	btScalar m_dampingConstant = 200.0f;
 	btScalar m_friction;
 	int m_id;
 
 	void DrawForce();
 	void DrawInfo();
+
+	void RemoveReactionForce();
 
 	btVector3 GetForce();
 	CollideeObject *GetCollidingObject();
@@ -43,8 +45,8 @@ private:
 	//std::unique_ptr<btPairCachingGhostObject> m_ghostVertex;
 	//std::unique_ptr<btSphereShape> sphere;
 
-	void CheckForCollision(std::unordered_map<GameObject *, CollideeObject> &objects);
-	void ManageCollision(std::unordered_map<GameObject *, CollideeObject> &objects);
+	void CheckForCollision(std::unordered_map<GameObject *, CollideeObject *> &objects);
+	void ManageCollision(std::unordered_map<GameObject *, CollideeObject *> &objects);
 
 	CollideeShapeType m_shapeInCollision;
 
@@ -72,7 +74,7 @@ private:
 	float m_maxAngle;
 
 	void HandleBoxCollision(std::vector<std::pair<btVector3, btVector3>> planes);
-	void HandleBoxCollision(CollideeObject& cObj);
+	void HandleBoxCollision(CollideeObject* cObj);
 	void Handle2DBoxCollision(std::vector<std::pair<btVector3, btVector3>> planes);
 	void HandleCircleCollision(const btVector3 &center, float radius);
 

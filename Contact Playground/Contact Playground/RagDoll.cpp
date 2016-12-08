@@ -52,7 +52,6 @@ RagDoll::RagDoll(BulletOpenGLApplication *app, bool useCustomContact)
 	m_useCustomContact = useCustomContact;
 }
 
-
 RagDoll::~RagDoll()
 {
 }
@@ -93,70 +92,9 @@ void RagDoll::InitializeRagDoll(float halfGroundHeight, int window_id) {
 	if (m_useCustomContact) {
 		m_leftFootCollider = std::unique_ptr<ColliderObject> (ContactManager::GetInstance().AddObjectForCollision(m_leftFoot, 20));
 		m_rightFootCollider = std::unique_ptr<ColliderObject> (ContactManager::GetInstance().AddObjectForCollision(m_rightFoot, 20));
-		m_torsoCollider = std::unique_ptr<ColliderObject>(ContactManager::GetInstance().AddObjectForCollision(m_torso));
+		//m_torsoCollider = std::unique_ptr<ColliderObject>(ContactManager::GetInstance().AddObjectForCollision(m_torso));
 	}
 
-}
-
-void RagDoll::Loop()	{
-	m_WalkingController->StateLoop();
-}
-
-void RagDoll::ConfigureContactModel() {
-	ContactManager::GetInstance().AddObjectForCollision(m_rightFoot);
-	ContactManager::GetInstance().AddObjectForCollision(m_leftFoot);
-}
-
-void RagDoll::CreateRagDoll(const btVector3 &position) {
-
-	// Create a torso centered at the position
-	btVector3 torsoHalfSize(torso_width / 2, torso_height / 2, 0.04);
-	btVector3 ulHalfSize = btVector3(upper_leg_width / 2, upper_leg_height / 2, 0.04f);
-	btVector3 llHalfSize = btVector3(lower_leg_width / 2, lower_leg_height / 2, 0.04f);
-	btVector3 fHalfSize = btVector3(foot_width / 2, foot_height / 2, 0.04f);
-
-	// Create RIGHT LEG	
-	m_upperRightLeg = Create2DBox(ulHalfSize, upper_leg_mass, btVector3(0 / 256.0, 153 / 256.0, 0 / 256.0), position + btVector3(0, 0, 0.15)); // Green
-	m_rightFoot = Create2DBox(fHalfSize, feet_mass, btVector3(153 / 256.0, 0 / 256.0, 153 / 256.0), position + btVector3(0, 0, 0.45)); // purple
-	m_lowerRightLeg = Create2DBox(llHalfSize, lower_leg_mass, btVector3(255 / 256.0, 102 / 256.0, 0 / 256.0), position + btVector3(0, 0, 0.3)); // Orange
-
-	m_torso = Create2DBox(torsoHalfSize, torso_mass, btVector3(0, 51 / 256.0, 102 / 256.0), position); // Blue
-
-	// Create LEFT LEG
-	m_upperLeftLeg = Create2DBox(ulHalfSize, upper_leg_mass, btVector3(255 / 256.0, 102 / 256.0, 255 / 256.0), position + btVector3(0, 0, -0.15)); // Pink
-	m_leftFoot = Create2DBox(fHalfSize, feet_mass, btVector3(0 / 256.0, 255 / 256.0, 255 / 256.0), position + btVector3(0, 0, -0.451)); // aqua blue
-	m_lowerLeftLeg = Create2DBox(llHalfSize, lower_leg_mass, btVector3(250 / 256.0, 250 / 256.0, 10 / 256.0), position + btVector3(0, 0, -0.3)); // Yellow
-
-	AddHinges();
-
-	m_bodies = { m_torso, m_upperLeftLeg, m_upperRightLeg, m_lowerLeftLeg, m_lowerRightLeg, m_leftFoot, m_rightFoot, };
-
-	//m_bodies = { m_torso };
-
-	
-
-}
-
-void RagDoll::AddHinges() {
-
-	// Connect torso to upper legs
-	m_torso_ulLeg = m_app->AddHingeConstraint(m_torso, m_upperLeftLeg, btVector3(0, -torso_height / 2, 0), btVector3(0, upper_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_ULL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_ULL_HIGH));
-	m_torso_urLeg = m_app->AddHingeConstraint(m_torso, m_upperRightLeg, btVector3(0, -torso_height / 2, 0), btVector3(0, upper_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_ULL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_URL_HIGH));
-
-	// Connect upper legs to lower legs
-	m_ulLeg_llLeg = m_app->AddHingeConstraint(m_upperLeftLeg, m_lowerLeftLeg, btVector3(0, -upper_leg_height / 2, 0), btVector3(0, lower_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_ULL_LLL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_ULL_LLL_HIGH));
-	m_urLeg_lrLeg = m_app->AddHingeConstraint(m_upperRightLeg, m_lowerRightLeg, btVector3(0, -upper_leg_height / 2, 0), btVector3(0, lower_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_URL_LRL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_URL_LRL_HIGH));
-
-	// Connect feet to lower legs
-	m_llLeg_lFoot = m_app->AddHingeConstraint(m_lowerLeftLeg, m_leftFoot, btVector3(0, -lower_leg_height / 2, 0), btVector3(-(foot_width) / 4, 0, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_LLL_LF_LOW), Constants::GetInstance().DegreesToRadians(HINGE_LLL_LF_HIGH));
-	m_lrLeg_rFoot = m_app->AddHingeConstraint(m_lowerRightLeg, m_rightFoot, btVector3(0, -lower_leg_height / 2, 0), btVector3(-(foot_width) / 4, 0, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_LRL_RF_LOW), Constants::GetInstance().DegreesToRadians(HINGE_LRL_RF_HIGH));
-
-}
-
-GameObject *RagDoll::Create2DBox(const btVector3 &halfSize, float mass, const btVector3 &color, const btVector3 &position) {
-	// Multiply size by scaling factor
-	GameObject *aBox = m_app->CreateGameObject(new btBox2dShape(halfSize), mass, color, position);
-	return aBox;
 }
 
 void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::deque<GameObject *> & grounds) {
@@ -165,13 +103,15 @@ void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::d
 
 		ContactManager::GetInstance().Update(timestep);
 
+		if (m_disabled) {
+			ContactManager::GetInstance().Reset();
+		}
+
 		std::set<GameObject *> lfGOs;
 		std::set<GameObject *> rfGOs;
-		std::set<GameObject *> torsoGOs;
 
 		ContactManager::GetInstance().GetCollidingGameObjectsForObject(m_leftFootCollider.get(), lfGOs);
 		ContactManager::GetInstance().GetCollidingGameObjectsForObject(m_rightFootCollider.get(), rfGOs);
-		ContactManager::GetInstance().GetCollidingGameObjectsForObject(m_torsoCollider.get(), torsoGOs);
 
 		for (auto const & ground : grounds) {
 
@@ -184,10 +124,29 @@ void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::d
 				//printf("Notify right foot. \n");
 				m_WalkingController->NotifyRightFootGroundContact();
 			}
+			int numManifolds = world->getDispatcher()->getNumManifolds();
+			for (int i = 0; i < numManifolds; i++)
+			{
+				btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
 
-			if (torsoGOs.find(ground) != torsoGOs.end()) {
-				//printf("Notify Torso. \n");
-				m_WalkingController->NotifyTorsoGroundContact();
+				btCollisionObject* obA = const_cast<btCollisionObject*>(contactManifold->getBody0());
+				btCollisionObject* obB = const_cast<btCollisionObject*>(contactManifold->getBody1());
+
+				for (int j = 0; j < contactManifold->getNumContacts(); j++)   {
+					btManifoldPoint& pt = contactManifold->getContactPoint(j);
+
+					for (auto const & ground : grounds) {
+						if (pt.m_distance1 < 0) {
+							if ((obA->getUserPointer() == m_torso && obB->getUserPointer() == ground) || (obA->getUserPointer() == ground && obB->getUserPointer() == m_torso)) {
+								//printf(">>>>>>>>>>>>>>>>>>>>>> Collision with right foot to ground detected. <<<<<<<<<<<<<<<<<<<<<< \n");
+								GameObject::ClearForces({ m_torso });
+								GameObject::ClearVelocities({ m_torso });
+								m_WalkingController->NotifyTorsoGroundContact();
+								break;
+							}
+						}
+					}
+				}
 			}
 
 		}
@@ -232,6 +191,88 @@ void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::d
 			}
 		}
 	}
+}
+
+void RagDoll::Loop()	{
+	m_WalkingController->StateLoop();
+
+	if (m_disabled) {
+		ContactManager::GetInstance().Reset();
+	}
+
+}
+
+void RagDoll::AddCollisionWithGround(GameObject *ground) {
+
+	ContactManager::GetInstance().AddCollisionPair(m_leftFoot, ground);
+	ContactManager::GetInstance().AddCollisionPair(m_rightFoot, ground);
+	//ContactManager::GetInstance().AddCollisionPair(m_torso, ground);
+
+}
+
+void RagDoll::RemoveCollisionWithGround(GameObject *ground)	{
+
+	ContactManager::GetInstance().RemoveCollisionPair(m_leftFoot, ground);
+	ContactManager::GetInstance().RemoveCollisionPair(m_rightFoot, ground);
+	//ContactManager::GetInstance().RemoveCollisionPair(m_torso, ground);
+
+}
+
+void RagDoll::ConfigureContactModel() {
+	ContactManager::GetInstance().AddObjectForCollision(m_rightFoot);
+	ContactManager::GetInstance().AddObjectForCollision(m_leftFoot);
+}
+
+void RagDoll::CreateRagDoll(const btVector3 &position) {
+
+	// Create a torso centered at the position
+	btVector3 torsoHalfSize(torso_width / 2, torso_height / 2, 0.04);
+	btVector3 ulHalfSize = btVector3(upper_leg_width / 2, upper_leg_height / 2, 0.04f);
+	btVector3 llHalfSize = btVector3(lower_leg_width / 2, lower_leg_height / 2, 0.04f);
+	btVector3 fHalfSize = btVector3(foot_width / 2, foot_height / 2, 0.04f);
+
+	// Create RIGHT LEG	
+	m_upperRightLeg = Create2DBox(ulHalfSize, upper_leg_mass, btVector3(0 / 256.0, 153 / 256.0, 0 / 256.0), position + btVector3(0, 0, 0.15), "upper right leg"); // Green
+	m_rightFoot = Create2DBox(fHalfSize, feet_mass, btVector3(153 / 256.0, 0 / 256.0, 153 / 256.0), position + btVector3(0, 0, 0.45), "Right foot"); // purple
+	m_lowerRightLeg = Create2DBox(llHalfSize, lower_leg_mass, btVector3(255 / 256.0, 102 / 256.0, 0 / 256.0), position + btVector3(0, 0, 0.3), "Lower right leg"); // Orange
+
+	m_torso = Create2DBox(torsoHalfSize, torso_mass, btVector3(0, 51 / 256.0, 102 / 256.0), position, "torso"); // Blue
+
+	// Create LEFT LEG
+	m_upperLeftLeg = Create2DBox(ulHalfSize, upper_leg_mass, btVector3(255 / 256.0, 102 / 256.0, 255 / 256.0), position + btVector3(0, 0, -0.15), "Upper right leg"); // Pink
+	m_leftFoot = Create2DBox(fHalfSize, feet_mass, btVector3(0 / 256.0, 255 / 256.0, 255 / 256.0), position + btVector3(0, 0, -0.451), "Left foot"); // aqua blue
+	m_lowerLeftLeg = Create2DBox(llHalfSize, lower_leg_mass, btVector3(250 / 256.0, 250 / 256.0, 10 / 256.0), position + btVector3(0, 0, -0.3), "lower left leg"); // Yellow
+
+	AddHinges();
+
+	m_bodies = { m_torso, m_upperLeftLeg, m_upperRightLeg, m_lowerLeftLeg, m_lowerRightLeg, m_leftFoot, m_rightFoot };
+
+	//m_bodies = { m_torso };
+
+	
+
+}
+
+void RagDoll::AddHinges() {
+
+	// Connect torso to upper legs
+	m_torso_ulLeg = m_app->AddHingeConstraint(m_torso, m_upperLeftLeg, btVector3(0, -torso_height / 2, 0), btVector3(0, upper_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_ULL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_ULL_HIGH));
+	m_torso_urLeg = m_app->AddHingeConstraint(m_torso, m_upperRightLeg, btVector3(0, -torso_height / 2, 0), btVector3(0, upper_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_ULL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_TORSO_URL_HIGH));
+
+	// Connect upper legs to lower legs
+	m_ulLeg_llLeg = m_app->AddHingeConstraint(m_upperLeftLeg, m_lowerLeftLeg, btVector3(0, -upper_leg_height / 2, 0), btVector3(0, lower_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_ULL_LLL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_ULL_LLL_HIGH));
+	m_urLeg_lrLeg = m_app->AddHingeConstraint(m_upperRightLeg, m_lowerRightLeg, btVector3(0, -upper_leg_height / 2, 0), btVector3(0, lower_leg_height / 2, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_URL_LRL_LOW), Constants::GetInstance().DegreesToRadians(HINGE_URL_LRL_HIGH));
+
+	// Connect feet to lower legs
+	m_llLeg_lFoot = m_app->AddHingeConstraint(m_lowerLeftLeg, m_leftFoot, btVector3(0, -lower_leg_height / 2, 0), btVector3(-(foot_width) / 4, 0, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_LLL_LF_LOW), Constants::GetInstance().DegreesToRadians(HINGE_LLL_LF_HIGH));
+	m_lrLeg_rFoot = m_app->AddHingeConstraint(m_lowerRightLeg, m_rightFoot, btVector3(0, -lower_leg_height / 2, 0), btVector3(-(foot_width) / 4, 0, 0), btVector3(0, 0, 1), btVector3(0, 0, 1), Constants::GetInstance().DegreesToRadians(HINGE_LRL_RF_LOW), Constants::GetInstance().DegreesToRadians(HINGE_LRL_RF_HIGH));
+
+}
+
+GameObject *RagDoll::Create2DBox(const btVector3 &halfSize, float mass, const btVector3 &color, const btVector3 &position, std::string name) {
+	// Multiply size by scaling factor
+	GameObject *aBox = m_app->CreateGameObject(new btBox2dShape(halfSize), mass, color, position, name);
+	return aBox;
 }
 
 void RagDoll::Idle() {
@@ -700,7 +741,6 @@ void RagDoll::Reset() {
 
 	GameObject::DisableObjects(m_bodies);
 	
-
 	m_StatesRadioGroup->set_int_val(0); // State 0
 	m_currentState = 0;
 	ChangeState(0);
@@ -712,14 +752,9 @@ void RagDoll::Reset() {
 	catch (const std::bad_function_call& e) {
 		//std::cout << e.what() << '\n';
 	}
-	
-	//GameObject::ClearForces({ randomBox });
-	//GameObject::ClearVelocities({ randomBox });
 
-	//GameObject::DisableObjects({ randomBox });
+	m_disabled = true;
 
-	////m_cameraManager->Reset();
-	//randomBox->Reposition(btVector3(5.0f, 3.5f, 0.0f));
 }
 
 void RagDoll::Start() {
@@ -729,6 +764,8 @@ void RagDoll::Start() {
 	Debug("Start button Pressed\n INITIATE WALKING!!!");
 	GameObject::EnableObjects(m_bodies);
 	
+	m_disabled = false;
+
 	m_WalkingController->InitiateWalking();
 
 	//GameObject::EnableObjects({ randomBox});

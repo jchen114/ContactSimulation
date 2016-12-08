@@ -44,15 +44,18 @@ public:
 
 	void Update(btScalar timestep);
 
-	void AddCollisionPair(ColliderObject *obj_collider, CollideeObject *obj_collidee);
-	void RemoveCollisionPair(GameObject *obj);
+	void AddCollisionPair(GameObject * obj_collider, GameObject * obj_collidee);
+	void RemoveCollisionPair(GameObject * obj_collider, GameObject *obj_collidee);
 
 	void GetCollideesForObject(ColliderObject *objQ, std::set<CollideeObject *> &collidingObjects);
 	void GetCollidingGameObjectsForObject(ColliderObject *objQ, std::set<GameObject *> &gameObjects);
+	
+	void Reset();
 
-	std::unordered_map<GameObject *, GameObject *> m_collisionPairs;
+	std::unordered_map<GameObject *, std::set<GameObject *>> m_collisionPairs;
 
 	bool m_beingUsed = false;
+
 
 	static void MyNearCallback(
 		btBroadphasePair& collisionPair,
@@ -75,7 +78,7 @@ public:
 			// obj1 is to collide with
 
 			// Add this pair to pairs to check
-			ContactManager::GetInstance().AddCollisionPair((GameObject *)ContactManager::GetInstance().m_forCollision.find(obj0->getUserPointer()), (GameObject *)m_toCollideWith.find(obj1.getUserPointer()));
+			//ContactManager::GetInstance().AddCollisionPair((GameObject *)obj0->getUserPointer(), (GameObject *)obj1->getUserPointer());
 			toContinue = false;
 		}
 		else if (
@@ -83,7 +86,7 @@ public:
 			&& ContactManager::GetInstance().m_toCollideWith.find((GameObject *)obj0->getUserPointer()) != ContactManager::GetInstance().m_toCollideWith.end()) {
 			//printf("object 0 to collide object 1 for collision \n");
 
-			// Add this pair to pairs to check
+			//ContactManager::GetInstance().AddCollisionPair((GameObject *)obj1->getUserPointer(), (GameObject *)obj0->getUserPointer());
 
 			toContinue = false;
 		}

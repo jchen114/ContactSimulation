@@ -5,7 +5,11 @@ GameObject::GameObject(btCollisionShape *pShape,
 	float mass,
 	const btVector3 &color,
 	const btVector3 &initialPosition,
-	const btQuaternion &initialRotation) {
+	std::string name,
+	const btQuaternion &initialRotation
+	) {
+
+	m_name = name;
 
 	m_pShape = pShape;	// Store the shape 
 	m_color = color;	// Store the color
