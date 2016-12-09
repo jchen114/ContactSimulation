@@ -13,6 +13,8 @@ class WalkingController;
 class BulletOpenGLApplication;
 class ColliderObject;
 
+class sqlite3;
+
 class RagDoll
 {
 public:
@@ -96,6 +98,9 @@ public:
 	std::function<void()> m_ResetCallback;
 	
 	bool m_disabled = true;
+
+	void InitializeDB();
+	void SaveState();
 
 private:
 
@@ -187,6 +192,9 @@ private:
 	GLUI_RadioGroup *m_GaitsRadioGroup;
 
 	BulletOpenGLApplication *m_app;
+
+	// Database
+	sqlite3 *m_samplesdb;
 
 };
 

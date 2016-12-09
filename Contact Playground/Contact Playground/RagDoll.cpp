@@ -12,7 +12,11 @@
 
 #include "BulletOpenGLApplication.h"
 
+#include "sqlite3.h"
+
 static RagDoll *m_ragDoll;
+
+std::string db_path = "..\\..\\Data\\samples.db";
 
 enum ControlIDs {
 	TORSO_KP, TORSO_KD = 0,
@@ -380,6 +384,62 @@ btVector3 RagDoll::GetLocation() {
 }
 
 #pragma endregion RagDoll
+
+#pragma region DATABASE
+
+void RagDoll::InitializeDB() {
+	int rc = sqlite3_open(db_path.c_str(), &m_samplesdb);
+	if (rc) {
+		printf("Can't open database. \n");
+	}
+	else {
+		printf("Database successfully opened. \n");
+	}
+
+	char *sql_stmt;
+	char *zErrorMsg;
+	sql_stmt = "CREATE TABLE IF NOT EXISTS STATES("	\
+		"ID INTEGER PRIMARY KEY NOT NULL," \
+		"TORSO_O REAL NOT NULL," \
+		"TORSO_AV REAL NOT NULL, " \
+		"TOSO_LV REAL NOT NULL, " \
+		"URL_O REAL NOT NULL, " \
+		"URL_AV REAL NOT NULL, " \
+		"ULL_O REAL NOT NULL, " \
+		"ULL_AV REAL NOT NULL, " \
+		"LRL_O REAL NOT NULL, " \
+		"LRL_AV REAL NOT NULL, " \
+		"LLL_O REAL NOT NULL, " \
+		"LLL_AV REAL NOT NULL, " \
+		"RF_O REAL NOT NULL, " \
+		"RF_AV REAL NOT NULL, " \
+		"LF_O REAL NOT NULL, " \
+		"LF_AV REAL NOT NULL); ";
+
+	rc = sqlite3_exec(m_samplesdb, sql_stmt, NULL, 0, &zErrorMsg);
+	if (rc != SQLITE_OK) {
+		printf("Sql error: %s \n", zErrorMsg);
+	}
+	else {
+		printf("States Table created successfully\n");
+	}
+
+	char *sql_stmt;
+	char *zErrorMsg;
+	sql_stmt = "CREATE TABLE IF NOT EXISTS SEQUENCE("	\
+		"SEQUENCE_ID INTEGER NOT NULL, " \
+		"STATE_ID INTEGER NOT NULL," \
+		"ORDER INTEGER NOT NULL); ";
+
+	rc = sqlite3_exec(m_samplesdb, sql_stmt, NULL, 0, &zErrorMsg);
+
+}
+
+void RagDoll::SaveState() {
+
+}
+
+#pragma endregion DATABASE
 
 #pragma region GUI
 
