@@ -2,7 +2,7 @@
 #include "CollideeObject.h"
 
 
-CollideeObject::CollideeObject(GameObject *object, CollideeInterest interest, float friction_coeff)
+CollideeObject::CollideeObject(GameObject *object, CollideeInterest interest, float friction_coeff, float ground_stiffness, float ground_damping)
 {
 
 	m_object = object;
@@ -30,6 +30,8 @@ CollideeObject::CollideeObject(GameObject *object, CollideeInterest interest, fl
 	}
 
 	m_friction = friction_coeff;
+	m_ground_stiffness = ground_stiffness;
+	m_ground_damping = ground_damping;
 
 }
 
@@ -129,4 +131,10 @@ std::vector <std::pair<btVector3, btVector3>> CollideeObject::GetPlanes() {
 
 float CollideeObject::GetFriction() {
 	return m_friction;
+}
+
+std::tuple<float, float> CollideeObject::GetGroundProperties() {
+
+	return std::make_tuple(m_ground_stiffness, m_ground_damping);
+
 }

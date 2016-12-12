@@ -11,6 +11,9 @@
 
 #include "TerrainCreator.h"
 
+std::string db_path = "..\\..\\Data\\samples.db";
+
+#include "sqlite3.h"
 
 using namespace std::placeholders;
 
@@ -21,7 +24,6 @@ static ContactLearningApp *m_app;
 ContactLearningApp::ContactLearningApp()
 {
 }
-
 
 ContactLearningApp::~ContactLearningApp()
 {
@@ -89,6 +91,9 @@ void ContactLearningApp::InitializePhysics() {
 
 	m_collisionClock.reset();
 
+	// Initialize the Database
+	InitializeDB();
+
 }
 
 void ContactLearningApp::Idle() {
@@ -139,6 +144,10 @@ void ContactLearningApp::CreateBodies() {
 	m_ragDoll->InitializeRagDoll(GROUND_HEIGHT, m_main_window_id);
 
 	m_ragDoll->m_ResetCallback = std::bind(&ContactLearningApp::Reset, this);
+	m_ragDoll->m_StartCallback = std::bind(&ContactLearningApp::Start, this);
+	m_ragDoll->m_SimulationEnd = std::bind(&ContactLearningApp::SimulationEnd, this);
+
+	m_running = false;
 
 }
 
@@ -206,20 +215,38 @@ void ContactLearningApp::Reset() {
 	
 	m_collisionGrounds.clear();
 	ContactManager::GetInstance().ClearObjectsToCollideWith();
-
+	
+	m_order = 0;
+	m_sequenceNumber += 1;
 
 	for (m_ground_idx = 0; m_ground_idx < 3; m_ground_idx++) {
 		m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
 		ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
 	}
 
-	ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(0));
-	ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(1));
-
 	btTransform tr;
 	m_collisionGrounds.back()->GetRigidBody()->getMotionState()->getWorldTransform(tr);
 
 	m_collisionEndPt = tr(btVector3(GROUND_WIDTH, 0, 0));
+
+	m_running = false;
+
+}
+
+void ContactLearningApp::Start() {
+
+	m_sampleClock.reset();
+	m_collisionClock.reset();
+	m_running = true;
+
+}
+
+void ContactLearningApp::SimulationEnd() {
+
+	// Reset the simulation.
+	m_ragDoll->Reset();
+	// Restart the simluation
+	m_ragDoll->Start();
 
 }
 
@@ -311,33 +338,41 @@ void ContactLearningApp::DrawCallback() {
 
 void ContactLearningApp::PostTickCallback(btScalar timestep) {
 
+	if (m_running) {
 
-	if (m_collisionClock.getTimeMilliseconds() > 10) {
-		for (auto ground : m_collisionGrounds) {
-			btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
-			btVector3 relPos = tr(m_ragDoll->GetLocation());
-			if (relPos.x() > -GROUND_WIDTH - 1.0f && relPos.x() < GROUND_WIDTH + 1.0f) {
-				m_ragDoll->AddCollisionWithGround(ground);
+		if (m_collisionClock.getTimeMilliseconds() > 200) {
+			for (auto ground : m_collisionGrounds) {
+				btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
+				btVector3 relPos = tr(m_ragDoll->GetLocation());
+				if (relPos.x() > -GROUND_WIDTH - 1.0f && relPos.x() < GROUND_WIDTH + 1.0f) {
+					m_ragDoll->AddCollisionWithGround(ground);
+				}
+				else {
+					m_ragDoll->RemoveCollisionWithGround(ground);
+				}
 			}
-			else {
-				m_ragDoll->RemoveCollisionWithGround(ground);
-			}
+			m_collisionClock.reset();
 		}
-		m_collisionClock.reset();
+
+		// Check for collisions
+		m_ragDoll->RagDollCollision(timestep, m_pWorld, m_collisionGrounds);
+
+		// Terrain Creation
+		ManageTerrainCreation();
+
+		// Collision Queue Manager
+		ManageGroundCollisions();
+
+		// Check the sample clock for sampling
+		if (m_sampleClock.getTimeMilliseconds() > 500) {
+			printf("Save samples to DB\n");
+			SaveSamplesToDB();
+			m_sampleClock.reset();
+		}
 	}
-
-	// Check for collisions
-	m_ragDoll->RagDollCollision(timestep, m_pWorld, m_collisionGrounds);
-
-	// Terrain Creation
-	ManageTerrainCreation();
-
-	// Collision Queue Manager
-	ManageGroundCollisions();
 
 	// Follow the RagDoll
 	m_cameraManager->SetCameraLocationX(m_ragDoll->GetLocation().x());
-
 }
 
 void ContactLearningApp::PreTickCallback(btScalar timestep) {
@@ -346,6 +381,180 @@ void ContactLearningApp::PreTickCallback(btScalar timestep) {
 }
 
 #pragma endregion DRAWING
+
+#pragma region DATABASE
+
+void ContactLearningApp::InitializeDB() {
+
+	// Create database
+	int rc = sqlite3_open(db_path.c_str(), &m_samplesdb);
+	if (rc) {
+		printf("Can't open database. \n");
+	}
+	else {
+		printf("Database successfully opened. \n");
+	}
+
+	// Create Table for storing state and targets
+	char *sql_stmt;
+	char *zErrorMsg;
+	sql_stmt = "CREATE TABLE IF NOT EXISTS STATES("	\
+		"ID INTEGER PRIMARY KEY NOT NULL," \
+		"TORSO_LV TEXT NOT NULL, " \
+		"TORSO_O REAL NOT NULL," \
+		"TORSO_AV REAL NOT NULL, " \
+		"URL_O REAL NOT NULL, " \
+		"URL_AV REAL NOT NULL, " \
+		"ULL_O REAL NOT NULL, " \
+		"ULL_AV REAL NOT NULL, " \
+		"LRL_O REAL NOT NULL, " \
+		"LRL_AV REAL NOT NULL, " \
+		"LLL_O REAL NOT NULL, " \
+		"LLL_AV REAL NOT NULL, " \
+		"RF_O REAL NOT NULL, " \
+		"RF_AV REAL NOT NULL, " \
+		"LF_O REAL NOT NULL, " \
+		"LF_AV REAL NOT NULL, " \
+		"GROUND_STIFFNESS, " \
+		"GROUND_SLOPE); ";
+
+	rc = sqlite3_exec(m_samplesdb, sql_stmt, NULL, 0, &zErrorMsg);
+	if (rc != SQLITE_OK) {
+		printf("Sql error: %s \n", zErrorMsg);
+	}
+	else {
+		printf("States Table created successfully\n");
+	}
+	// Create table for storing the sequences
+
+	sql_stmt = "CREATE TABLE IF NOT EXISTS SEQUENCES("	\
+		"SEQUENCE_ID INTEGER NOT NULL, " \
+		"STATE_ID INTEGER NOT NULL," \
+		"SEQ_ORDER INTEGER NOT NULL); ";
+
+	rc = sqlite3_exec(m_samplesdb, sql_stmt, NULL, 0, &zErrorMsg);
+
+	if (rc != SQLITE_OK) {
+		printf("Sql error: %s \n", zErrorMsg);
+	}
+	else {
+		printf("Sequence Table created successfully\n");
+	}
+
+	// Query for the Number of sequences 
+	const char *sql_cmd = "SELECT COALESCE(MAX(SEQUENCE_ID), 0) AS NumSequences FROM SEQUENCES;";
+	char *zErrMsg = 0;
+	rc = sqlite3_exec(m_samplesdb, sql_cmd, NumSequencesCallback, (void *)0, &zErrMsg);
+	if (rc != SQLITE_OK) {
+		printf("Error num sequences msg: %s \n", zErrMsg);
+	}
+
+}
+
+void ContactLearningApp::SaveSamplesToDB() {
+	
+	std::vector<float> OsAndAVs = m_ragDoll->GetOrientationsAndAngularVelocities();
+	btVector3 torsoLV = m_ragDoll->GetTorsoLinearVelocity();
+
+	// Save data into database
+	char *zErrMsg = 0;
+	int rc;
+	const char *sql_cmd = "INSERT INTO STATES(" \
+		"ID, " \
+		"TORSO_LV, " \
+		"TORSO_O, " \
+		"TORSO_AV, " \
+		"URL_O," \
+		"URL_AV, " \
+		"ULL_O, " \
+		"ULL_AV, " \
+		"LRL_O, " \
+		"LRL_AV, " \
+		"LLL_O, " \
+		"LLL_AV, " \
+		"RF_O, " \
+		"RF_AV, "\
+		"LF_O, " \
+		"LF_AV, " \
+		"GROUND_STIFFNESS, " \
+		"GROUND_SLOPE)" \
+		"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	sqlite3_stmt *pStmt;
+	rc = sqlite3_prepare(m_samplesdb, sql_cmd, -1, &pStmt, 0);
+
+	if (rc != SQLITE_OK) {
+		printf("Insert into states prepare response: %s \n", sqlite3_errstr(rc));
+	}
+
+	char buff[100];
+	sprintf_s(buff, "%f, %f", torsoLV.x(), torsoLV.y());
+	sqlite3_bind_text(pStmt, 1, buff, 100, SQLITE_TRANSIENT);
+
+	for (int i = 2; i < 16; i++) {
+		sqlite3_bind_double(pStmt, i, OsAndAVs.at(i - 2));
+	}
+
+	// Determine which ground Rag Doll is over.
+	float stiffness = 0.0f;
+	float damping = 0.0f;
+
+	for (auto ground : m_collisionGrounds) {
+		btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
+		btVector3 relPos = tr(m_ragDoll->GetLocation());
+
+		if (relPos.x() >= -GROUND_WIDTH && relPos.x() < GROUND_WIDTH) {
+			CollideeObject obj = ContactManager::GetInstance().m_toCollideWith.find(ground)->second;
+			std::tuple<float, float> gps = obj.GetGroundProperties();
+			stiffness = std::get<0>(gps);
+			damping = std::get<1>(gps);
+		}
+	}
+
+	sqlite3_bind_double(pStmt, 16, stiffness);
+	sqlite3_bind_double(pStmt, 17, damping);
+
+	rc = sqlite3_step(pStmt);
+
+	if (rc != 101) {
+		printf("Insert into states step response: %s \n", sqlite3_errstr(rc));
+	}
+
+	sqlite3_finalize(pStmt);
+
+	// Get the most recent ID inserted
+	int rowId = sqlite3_last_insert_rowid(m_samplesdb);
+	printf("row ID: %d\n", rowId);
+	SaveSequenceToDB(rowId);
+
+}
+
+void ContactLearningApp::SaveSequenceToDB(int rowId) {
+
+	char *zErrMsg = 0;
+	int rc;
+	const char *sql_cmd = "INSERT INTO SEQUENCES(" \
+		"SEQUENCE_ID, " \
+		"STATE_ID, " \
+		"SEQ_ORDER) " \
+		"VALUES(?, ?, ?)";
+	sqlite3_stmt *pStmt;
+	rc = sqlite3_prepare(m_samplesdb, sql_cmd, -1, &pStmt, 0);
+
+	sqlite3_bind_int(pStmt, 1, m_sequenceNumber);
+	sqlite3_bind_int(pStmt, 2, rowId);
+	sqlite3_bind_int(pStmt, 3, m_order ++);
+
+	rc = sqlite3_step(pStmt);
+	if (rc != 101) {
+		printf("Sequences response: %s\n", sqlite3_errstr(rc));
+	}
+	sqlite3_finalize(pStmt);
+
+}
+
+#pragma endregion DATABASE
+
+#pragma region BULLET
 
 void InternalPostTickCallback(btDynamicsWorld *world, btScalar timestep) {
 	m_app->PostTickCallback(timestep);
@@ -362,3 +571,35 @@ static void ContactLearningIdle() {
 static ContactLearningApp* GetInstance() {
 	return m_app;
 }
+
+#pragma endregion BULLET
+
+#pragma region SQL_CALLBACKS
+
+static int NumSequencesCallback(void *data, int argc, char **argv, char **azColName) {
+	for (int i = 0; i < argc; i++) {
+		std::string col = azColName[i];
+		std::string val = argv[i];
+
+		if (!col.compare("NumSequences")) {
+			printf("NumSequences = %s\n", val);
+			m_app->m_sequenceNumber = std::stoi(val);
+		}
+	}
+	return 0;
+}
+
+static int NewestIDCallback(void *data, int argc, char **argv, char **azColName) {
+	for (int i = 0; i < argc; i++) {
+		std::string col = azColName[i];
+		std::string val = argv[i];
+
+		if (!col.compare("NewestID")) {
+			printf("NewstID = %s\n", val);
+			m_app->m_newestID = std::stoi(val);
+		}
+	}
+	return 0;
+}
+
+#pragma endregion SQL_CALLBACKS

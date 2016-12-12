@@ -96,11 +96,14 @@ public:
 	bool DrawShape(btScalar *transform, const btCollisionShape *pShape, const btVector3 &color);
 
 	std::function<void()> m_ResetCallback;
+	std::function<void()> m_StartCallback;
+	std::function<void()> m_SimulationEnd;
 	
 	bool m_disabled = true;
 
-	void InitializeDB();
-	void SaveState();
+	// Get Data
+	std::vector<float> GetOrientationsAndAngularVelocities();
+	btVector3 GetTorsoLinearVelocity();
 
 private:
 
@@ -192,10 +195,7 @@ private:
 	GLUI_RadioGroup *m_GaitsRadioGroup;
 
 	BulletOpenGLApplication *m_app;
-
-	// Database
-	sqlite3 *m_samplesdb;
-
+	
 };
 
 /* GLUI CALLBACKS */

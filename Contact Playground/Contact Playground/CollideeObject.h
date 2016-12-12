@@ -2,6 +2,7 @@
 
 #include "GameObject.h"
 #include "BulletCollision\CollisionShapes\btBox2dShape.h"
+#include <tuple>
 
 typedef enum {
 	COLLIDEE_BOX_2D_SHAPE,
@@ -17,7 +18,7 @@ typedef enum {
 class CollideeObject
 {
 public:
-	CollideeObject(GameObject *object, CollideeInterest interest = OBJECT_NOT_OF_INTEREST, float friction_coeff=1.5f);
+	CollideeObject(GameObject *object, CollideeInterest interest = OBJECT_NOT_OF_INTEREST, float friction_coeff=1.5f, float ground_stiffness=2000.0f, float ground_damping=200.0f);
 	~CollideeObject();
 
 	void *m_userPointer;
@@ -28,9 +29,11 @@ public:
 	std::vector <std::pair<btVector3, btVector3>> GetPlanes();
 	std::vector <std::pair<btVector3, btVector3>> GetRelativePlanes();
 	btVector3 GetCenter();
-	float GetRadius();
 
+	float GetRadius();
 	float GetFriction();
+
+	std::tuple<float, float> GetGroundProperties();
 
 	CollideeInterest m_interestType;
 
@@ -41,6 +44,8 @@ private:
 	std::vector <std::pair<btVector3, btVector3>> m_planes;
 
 	float m_friction;
+	float m_ground_stiffness;
+	float m_ground_damping;
 
 };
 

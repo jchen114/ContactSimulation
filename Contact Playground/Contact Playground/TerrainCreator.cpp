@@ -2,14 +2,12 @@
 #include "TerrainCreator.h"
 
 
-TerrainCreator::TerrainCreator(float mean_length, float std_dev, float height, float depth, float slope_min, float slope_max, float friction_min, float friction_max)
+TerrainCreator::TerrainCreator(float mean_length, float std_dev, float height, float depth, float slope_min, float slope_max)
 {
 	m_mean_length = mean_length;
 	m_std_dev = std_dev;
 	m_slope_min = slope_min;
 	m_slope_max = slope_max;
-	m_fric_min = friction_min;
-	m_fric_max = friction_max;
 	m_height = height;
 	m_depth = depth; 
 

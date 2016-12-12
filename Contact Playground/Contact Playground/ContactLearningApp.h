@@ -54,7 +54,20 @@ public:
 	void CreateMoarTerrain();
 	void ManageGroundCollisions();
 
+	void Start();
 	void Reset();
+	void SimulationEnd();
+
+	/* Data base stuff*/
+	void InitializeDB();
+	void SaveSamplesToDB();
+	void SaveSequenceToDB(int rowId);
+
+	int m_sequenceNumber = -1;
+	int m_newestID = -1;
+	int m_order = -1;
+
+	bool m_running = false;
 
 private:
 
@@ -76,8 +89,15 @@ private:
 	std::deque<GameObject *> m_collisionGrounds;
 
 	btClock m_collisionClock;
+	btClock m_sampleClock;
+
+	// Database
+	sqlite3 *m_samplesdb;
 
 };
 
 void InternalPostTickCallback(btDynamicsWorld *world, btScalar timestep);
 void InternalPreTickCallback(btDynamicsWorld *world, btScalar timestep);
+
+/* SQL Callbacks */
+static int NumSequencesCallback(void *data, int argc, char **argv, char **azColName);

@@ -14,7 +14,6 @@ ColliderVertex::ColliderVertex(GameObject *object, const btVector3 &offset, int 
 	m_id = vid;
 }
 
-
 ColliderVertex::~ColliderVertex()
 {
 }
@@ -59,6 +58,11 @@ void ColliderVertex::ManageCollision(std::unordered_map<GameObject *, CollideeOb
 
 			m_friction = object->GetFriction();
 
+			auto gp = object->GetGroundProperties();
+			
+			m_springConstant = std::get<0>(gp);
+			m_dampingConstant = std::get<1>(gp);
+
 			m_minAngle = -atan(m_friction);
 			m_maxAngle = atan(m_friction);
 
@@ -97,6 +101,11 @@ void ColliderVertex::CheckForCollision(std::unordered_map<GameObject *, Collidee
 	for (kv = objects.begin(); kv != objects.end(); kv ++) {
 		CollideeObject* object = kv->second;
 		m_friction = object->GetFriction();
+
+		auto gp = object->GetGroundProperties();
+
+		m_springConstant = std::get<0>(gp);
+		m_dampingConstant = std::get<1>(gp);
 
 		m_minAngle = -atan(m_friction);
 		m_maxAngle = atan(m_friction);
@@ -146,6 +155,9 @@ CollideeObject *ColliderVertex::GetCollidingObject() {
 
 void ColliderVertex::RemoveReactionForce() {
 	m_reactionForce = btVector3(0, 0, 0);
+	m_collideeObject = nullptr;
+	m_contactObject = nullptr;
+	m_state = NO_COLLISION;
 }
 
 #pragma region HANDLERS
