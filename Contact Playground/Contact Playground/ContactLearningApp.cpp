@@ -6,6 +6,7 @@
 #include "ContactManager.h"
 #include <glui\glui.h>
 #include <functional>
+#include <iostream>
 
 #include <stdexcept>
 
@@ -93,6 +94,10 @@ void ContactLearningApp::InitializePhysics() {
 
 	// Initialize the Database
 	InitializeDB();
+	/* Threading */
+	// m_Ready = true;
+	m_dbSaver = std::thread(std::bind(&ContactLearningApp::DBWorkerThread, this));
+	m_Processed = true;
 
 }
 
@@ -215,6 +220,8 @@ void ContactLearningApp::Reset() {
 	
 	m_collisionGrounds.clear();
 	ContactManager::GetInstance().ClearObjectsToCollideWith();
+
+	// Remove grounds start with newly generated grounds.
 	
 	m_order = 0;
 	m_sequenceNumber += 1;
@@ -366,7 +373,14 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 		// Check the sample clock for sampling
 		if (m_sampleClock.getTimeMilliseconds() > 500) {
 			printf("Save samples to DB\n");
-			SaveSamplesToDB();
+			// Wait for worker to finish processing
+			std::unique_lock <std::mutex> l(m_mutex);
+			m_ProcessedCV.wait(l, [this] () {return m_Processed; });
+			// Instruct thread to execute
+			//std::lock_guard<std::mutex> lg(m_mutex);
+			m_Ready = true;
+			m_ReadyCV.notify_one();
+			//SaveSamplesToDB();
 			m_sampleClock.reset();
 		}
 	}
@@ -552,6 +566,25 @@ void ContactLearningApp::SaveSequenceToDB(int rowId) {
 
 }
 
+void ContactLearningApp::DBWorkerThread() {
+
+	printf("Start worker thread. \n");
+	while (true) {
+		//printf("Inside while loop and waiting. \n");
+		std::unique_lock<std::mutex> ul(m_mutex);
+		m_ReadyCV.wait(ul, [this] () {return m_Ready; });
+		//printf("Condition passed. \n");
+		m_Processed = false;
+		//std::cout << "Worker thread processing data. " << std::endl;
+		SaveSamplesToDB();
+		m_Processed = true;
+		m_Ready = false;
+		//ul.unlock();
+		m_ProcessedCV.notify_one();
+	}
+
+}
+
 #pragma endregion DATABASE
 
 #pragma region BULLET
@@ -582,8 +615,9 @@ static int NumSequencesCallback(void *data, int argc, char **argv, char **azColN
 		std::string val = argv[i];
 
 		if (!col.compare("NumSequences")) {
-			printf("NumSequences = %s\n", val);
+			printf("NumSequences = %d\n", std::stoi(val));
 			m_app->m_sequenceNumber = std::stoi(val);
+			m_app->m_sequenceNumber++;
 		}
 	}
 	return 0;

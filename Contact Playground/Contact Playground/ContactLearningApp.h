@@ -11,6 +11,10 @@
 #include "ContactCollisionDispatcher.h"
 #include "RagDoll.h"
 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
 class GLUI;
 class TactileController;
 class ColliderObject;
@@ -62,6 +66,15 @@ public:
 	void InitializeDB();
 	void SaveSamplesToDB();
 	void SaveSequenceToDB(int rowId);
+	
+	std::mutex m_mutex;
+	//std::unique_lock <std::mutex> m_lk;
+	std::condition_variable m_ReadyCV;
+	std::condition_variable m_ProcessedCV;
+	bool m_Ready = false;
+	bool m_Processed = false;
+	std::thread m_dbSaver;
+	void DBWorkerThread();
 
 	int m_sequenceNumber = -1;
 	int m_newestID = -1;
