@@ -79,8 +79,10 @@ void ContactLearningApp::InitializePhysics() {
 	m_pWorld->setInternalTickCallback(InternalPreTickCallback, 0, true);
 	m_pWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
 
-	CreateGround(btVector3(0, 0, 0));
+	//CreateGround(btVector3(0, 0, 0));
 	CreateBodies();
+
+	Reset();
 
 	//m_pWorld->getPairCache()->setOverlapFilterCallback(ContactManager::GetInstance().GetFilterCallback());
 
@@ -138,8 +140,6 @@ void ContactLearningApp::CreateGround(const btVector3 &pos) {
 
 	m_grounds.push_back(ground);
 	CreateMoarTerrain();
-
-	Reset();
 
 }
 
@@ -222,7 +222,18 @@ void ContactLearningApp::Reset() {
 	ContactManager::GetInstance().ClearObjectsToCollideWith();
 
 	// Remove grounds start with newly generated grounds.
-	
+	for (int i = 0; i < m_grounds.size(); i ++) {
+		GameObject *ground = m_grounds.at(i);
+		// Remove from world
+		m_pWorld->removeRigidBody(ground->GetRigidBody());
+		// Remove from world objects
+		m_objects.erase(std::remove(m_objects.begin(), m_objects.end(), ground), m_objects.end());
+	}
+
+	m_grounds.clear();
+
+	CreateGround();
+
 	m_order = 0;
 	m_sequenceNumber += 1;
 
@@ -429,6 +440,8 @@ void ContactLearningApp::InitializeDB() {
 		"RF_AV REAL NOT NULL, " \
 		"LF_O REAL NOT NULL, " \
 		"LF_AV REAL NOT NULL, " \
+		"RF_FORCES NOT NULL, " \
+		"LF_FORCES NOT NULL, " \
 		"GROUND_STIFFNESS, " \
 		"GROUND_SLOPE); ";
 
@@ -473,28 +486,9 @@ void ContactLearningApp::SaveSamplesToDB() {
 	// Save data into database
 	char *zErrMsg = 0;
 	int rc;
-	const char *sql_cmd = "INSERT INTO STATES(" \
-		"ID, " \
-		"TORSO_LV, " \
-		"TORSO_O, " \
-		"TORSO_AV, " \
-		"URL_O," \
-		"URL_AV, " \
-		"ULL_O, " \
-		"ULL_AV, " \
-		"LRL_O, " \
-		"LRL_AV, " \
-		"LLL_O, " \
-		"LLL_AV, " \
-		"RF_O, " \
-		"RF_AV, "\
-		"LF_O, " \
-		"LF_AV, " \
-		"GROUND_STIFFNESS, " \
-		"GROUND_SLOPE)" \
-		"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 	sqlite3_stmt *pStmt;
-	rc = sqlite3_prepare(m_samplesdb, sql_cmd, -1, &pStmt, 0);
+	rc = sqlite3_prepare(m_samplesdb, m_insert_states_sql_cmd, -1, &pStmt, 0);
 
 	if (rc != SQLITE_OK) {
 		printf("Insert into states prepare response: %s \n", sqlite3_errstr(rc));
@@ -507,6 +501,19 @@ void ContactLearningApp::SaveSamplesToDB() {
 	for (int i = 2; i < 16; i++) {
 		sqlite3_bind_double(pStmt, i, OsAndAVs.at(i - 2));
 	}
+
+	auto forces = m_ragDoll->GetContactForces();
+	auto rightFootForces = std::get<0>(forces);
+	auto leftFootForces = std::get<1>(forces);
+
+	std::string rf_forces_str;
+	std::string lf_forces_str;
+	
+	BuildStringFromForces(rf_forces_str, rightFootForces);
+	BuildStringFromForces(lf_forces_str, leftFootForces);
+
+	sqlite3_bind_text(pStmt, 16, rf_forces_str.c_str(), 300, SQLITE_TRANSIENT);
+	sqlite3_bind_text(pStmt, 17, lf_forces_str.c_str(), 300, SQLITE_TRANSIENT);
 
 	// Determine which ground Rag Doll is over.
 	float stiffness = 0.0f;
@@ -524,8 +531,8 @@ void ContactLearningApp::SaveSamplesToDB() {
 		}
 	}
 
-	sqlite3_bind_double(pStmt, 16, stiffness);
-	sqlite3_bind_double(pStmt, 17, damping);
+	sqlite3_bind_double(pStmt, 18, stiffness);
+	sqlite3_bind_double(pStmt, 19, damping);
 
 	rc = sqlite3_step(pStmt);
 
@@ -546,13 +553,8 @@ void ContactLearningApp::SaveSequenceToDB(int rowId) {
 
 	char *zErrMsg = 0;
 	int rc;
-	const char *sql_cmd = "INSERT INTO SEQUENCES(" \
-		"SEQUENCE_ID, " \
-		"STATE_ID, " \
-		"SEQ_ORDER) " \
-		"VALUES(?, ?, ?)";
 	sqlite3_stmt *pStmt;
-	rc = sqlite3_prepare(m_samplesdb, sql_cmd, -1, &pStmt, 0);
+	rc = sqlite3_prepare(m_samplesdb, m_insert_sequences_cmd, -1, &pStmt, 0);
 
 	sqlite3_bind_int(pStmt, 1, m_sequenceNumber);
 	sqlite3_bind_int(pStmt, 2, rowId);

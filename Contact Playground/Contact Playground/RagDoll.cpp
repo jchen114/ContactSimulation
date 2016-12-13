@@ -12,6 +12,8 @@
 
 #include "BulletOpenGLApplication.h"
 
+#include <utility>
+
 static RagDoll *m_ragDoll;
 
 enum ControlIDs {
@@ -409,6 +411,10 @@ std::vector<float> RagDoll::GetOrientationsAndAngularVelocities() {
 
 btVector3 RagDoll::GetTorsoLinearVelocity() {
 	return m_torso->GetRigidBody()->getLinearVelocity();
+}
+
+std::pair<std::vector<btVector3>, std::vector<btVector3>> RagDoll::GetContactForces() {
+	return std::make_pair(m_rightFootCollider->GetForcesOnVertexes(), m_leftFootCollider->GetForcesOnVertexes());
 }
 
 #pragma endregion RagDoll

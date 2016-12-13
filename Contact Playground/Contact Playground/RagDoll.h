@@ -104,6 +104,7 @@ public:
 	// Get Data
 	std::vector<float> GetOrientationsAndAngularVelocities();
 	btVector3 GetTorsoLinearVelocity();
+	std::pair<std::vector<btVector3>, std::vector<btVector3>> GetContactForces();
 
 private:
 

@@ -114,3 +114,32 @@ void InternalPreTickCallback(btDynamicsWorld *world, btScalar timestep);
 
 /* SQL Callbacks */
 static int NumSequencesCallback(void *data, int argc, char **argv, char **azColName);
+
+const char *m_insert_states_sql_cmd = "INSERT INTO STATES(" \
+"ID, " \
+"TORSO_LV, " \
+"TORSO_O, " \
+"TORSO_AV, " \
+"URL_O," \
+"URL_AV, " \
+"ULL_O, " \
+"ULL_AV, " \
+"LRL_O, " \
+"LRL_AV, " \
+"LLL_O, " \
+"LLL_AV, " \
+"RF_O, " \
+"RF_AV, "\
+"LF_O, " \
+"LF_AV, " \
+"RF_FORCES, " \
+"LF_FORCES, " \
+"GROUND_STIFFNESS, " \
+"GROUND_SLOPE)" \
+"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+const char *m_insert_sequences_cmd = "INSERT INTO SEQUENCES(" \
+"SEQUENCE_ID, " \
+"STATE_ID, " \
+"SEQ_ORDER) " \
+"VALUES(?, ?, ?)";
