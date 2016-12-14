@@ -184,6 +184,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="OpenGLMotionState.h" />
     <ClInclude Include="RagDoll.h" />
+    <ClInclude Include="SQL_DataWrapper.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="Gains.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="RagDoll.cpp" />
+    <ClCompile Include="SQL_DataWrapper.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

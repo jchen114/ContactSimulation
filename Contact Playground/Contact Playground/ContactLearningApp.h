@@ -15,6 +15,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "SQL_DataWrapper.h"
+
 class GLUI;
 class TactileController;
 class ColliderObject;
@@ -58,23 +60,26 @@ public:
 	void CreateMoarTerrain();
 	void ManageGroundCollisions();
 
+	GameObject *GetCurrentStandingGround();
+
 	void Start();
 	void Reset();
 	void SimulationEnd();
 
 	/* Data base stuff*/
 	void InitializeDB();
-	void SaveSamplesToDB();
-	void SaveSequenceToDB(int rowId);
+	void SaveSamplesToDB(SQL_DataWrapper data);
+	void SaveSequenceToDB(int sequenceNumber, int rowId, int order);
 	
 	std::mutex m_mutex;
-	//std::unique_lock <std::mutex> m_lk;
-	std::condition_variable m_ReadyCV;
-	std::condition_variable m_ProcessedCV;
+	std::deque<SQL_DataWrapper> m_data;
+	std::condition_variable m_NotEmptyCV;
+	//std::condition_variable m_ProcessedCV;
 	bool m_Ready = false;
 	bool m_Processed = false;
 	std::thread m_dbSaver;
 	void DBWorkerThread();
+	SQL_DataWrapper PushDataIntoQueue();
 
 	int m_sequenceNumber = -1;
 	int m_newestID = -1;
@@ -103,6 +108,10 @@ private:
 
 	btClock m_collisionClock;
 	btClock m_sampleClock;
+	btClock m_generationClock;
+	btClock m_resetTimerClock;
+
+	bool m_restart;
 
 	// Database
 	sqlite3 *m_samplesdb;
@@ -135,8 +144,9 @@ const char *m_insert_states_sql_cmd = "INSERT INTO STATES(" \
 "RF_FORCES, " \
 "LF_FORCES, " \
 "GROUND_STIFFNESS, " \
+"GROUND_DAMPING, " \
 "GROUND_SLOPE)" \
-"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 const char *m_insert_sequences_cmd = "INSERT INTO SEQUENCES(" \
 "SEQUENCE_ID, " \

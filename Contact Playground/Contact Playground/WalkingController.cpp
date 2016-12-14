@@ -577,12 +577,16 @@ void WalkingController::PauseWalking(){
 void WalkingController::InitiateWalking() {
 	m_currentState = WALKING;
 	m_ragDollState = STATE_0;
+	m_reset = true;
 }
 
 void WalkingController::Reset(){
 	m_torsoHasContacted = false;
+	m_rightFootGroundHasContacted = false;
+	m_leftFootGroundHasContacted = false;
 	m_ragDollState = STATE_0;
 	m_currentState = RESET;
+
 }
 
 void WalkingController::NotifyLeftFootGroundContact() {
