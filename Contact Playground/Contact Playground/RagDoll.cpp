@@ -116,19 +116,21 @@ void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::d
 		ContactManager::GetInstance().GetCollidingGameObjectsForObject(m_rightFootCollider.get(), rfGOs);
 
 		for (auto const & ground : grounds) {
-
-			if (lfGOs.find(ground) != lfGOs.end()) {
-				//printf("Notify left foot. \n");
-				m_WalkingController->NotifyLeftFootGroundContact();
+			if (!lfGOs.empty()) {
+				if (lfGOs.find(ground) != lfGOs.end()) {
+					//printf("Notify left foot. \n");
+					m_WalkingController->NotifyLeftFootGroundContact();
+				}
 			}
-
-			if (rfGOs.find(ground) != rfGOs.end()) {
-				//printf("Notify right foot. \n");
-				m_WalkingController->NotifyRightFootGroundContact();
+			if (!rfGOs.empty()) {
+				if (!rfGOs.empty() && rfGOs.find(ground) != rfGOs.end()) {
+					//printf("Notify right foot. \n");
+					m_WalkingController->NotifyRightFootGroundContact();
+				}
 			}
-			int numManifolds = world->getDispatcher()->getNumManifolds();
-			for (int i = 0; i < numManifolds; i++)
-			{
+		}
+		int numManifolds = world->getDispatcher()->getNumManifolds();
+		for (int i = 0; i < numManifolds; i++) {
 				btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
 
 				btCollisionObject* obA = const_cast<btCollisionObject*>(contactManifold->getBody0());
@@ -158,9 +160,6 @@ void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::d
 					}
 				}
 			}
-
-		}
-
 	}
 	else {
 		// Use Default collision detection
@@ -194,6 +193,14 @@ void RagDoll::RagDollCollision(btScalar timestep, btDynamicsWorld *world, std::d
 							GameObject::ClearForces({ m_torso });
 							GameObject::ClearVelocities({ m_torso });
 							m_WalkingController->NotifyTorsoGroundContact();
+
+							try {
+								m_SimulationEnd();
+							}
+							catch (const std::bad_function_call& e) {
+								//std::cout << e.what() << '\n';
+							}
+
 							break;
 						}
 					}

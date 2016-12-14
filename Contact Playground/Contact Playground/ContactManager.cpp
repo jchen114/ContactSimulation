@@ -54,6 +54,7 @@ int ContactManager::RemoveObjectForCollision(GameObject *object) {
 int ContactManager::RemoveObjectToCollideWith(GameObject *object) {
 	// TODO
 	m_toCollideWith.erase(object);
+	printf("Remove object to collide with size: %d\n", m_toCollideWith.size());
 	return 0;
 }
 
@@ -78,6 +79,8 @@ void ContactManager::Reset() {
 		ColliderObject collider = iter->second;
 		collider.RemoveForces();
 	}
+
+	m_collisionPairs.clear();
 }
 
 #pragma endregion CONTACT_INTERFACE

@@ -18,7 +18,12 @@ typedef enum {
 class CollideeObject
 {
 public:
-	CollideeObject(GameObject *object, CollideeInterest interest = OBJECT_NOT_OF_INTEREST, float friction_coeff=1.5f, float ground_stiffness=2000.0f, float ground_damping=200.0f);
+	CollideeObject(
+		GameObject *object, 
+		CollideeInterest interest = OBJECT_NOT_OF_INTEREST, 
+		float friction_coeff=2.0f, 
+		float ground_stiffness=2500.0f, 
+		float ground_damping=250.0f);
 	~CollideeObject();
 
 	void *m_userPointer;

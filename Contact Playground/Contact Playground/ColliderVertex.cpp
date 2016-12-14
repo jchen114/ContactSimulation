@@ -158,6 +158,8 @@ void ColliderVertex::RemoveReactionForce() {
 	m_collideeObject = nullptr;
 	m_contactObject = nullptr;
 	m_state = NO_COLLISION;
+	
+	m_object->GetRigidBody()->applyForce(m_reactionForce, m_offset);
 }
 
 #pragma region HANDLERS
