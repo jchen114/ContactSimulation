@@ -150,6 +150,7 @@ void ContactLearningApp::CreateGround(const btVector3 &pos) {
 void ContactLearningApp::CreateBodies() {
 	// Add the rag doll
 	m_ragDoll = std::unique_ptr<RagDoll>(new RagDoll(this, true));
+	//m_ragDoll = std::unique_ptr<RagDoll>(new RagDoll(this, false));
 	m_ragDoll->InitializeRagDoll(GROUND_HEIGHT, m_main_window_id);
 
 	m_ragDoll->m_ResetCallback = std::bind(&ContactLearningApp::Reset, this);
@@ -230,7 +231,7 @@ void ContactLearningApp::ManageGroundCollisions() {
 				ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
 			}
 		}
-		if (m_collisionGrounds.size() > 3) {
+		while (m_collisionGrounds.size() > 5) {
 			GameObject *ground = m_collisionGrounds.front();
 			m_collisionGrounds.pop_front();
 			ContactManager::GetInstance().RemoveObjectToCollideWith(ground);
@@ -288,6 +289,8 @@ void ContactLearningApp::Reset() {
 	m_collisionEndPt = tr(btVector3(GROUND_WIDTH, 0, 0));
 
 	m_running = false;
+
+	m_ragDoll->AddCollisionWithGround(m_collisionGrounds.front());
 
 }
 
@@ -428,13 +431,13 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 
 		// Check the sample clock for sampling
 		if (m_sampleClock.getTimeMilliseconds() > 500) {
-			//printf("Save samples to DB\n");
-			// Wait for worker to finish processing
-			SQL_DataWrapper dat = PushDataIntoQueue();
-			std::unique_lock <std::mutex> l(m_mutex);
-			m_data.push_front(dat);
-			m_NotEmptyCV.notify_one();
-			l.unlock();
+			if (ContactManager::GetInstance().m_beingUsed) {
+				SQL_DataWrapper dat = PushDataIntoQueue();
+				std::unique_lock <std::mutex> l(m_mutex);
+				m_data.push_front(dat);
+				m_NotEmptyCV.notify_one();
+				l.unlock();
+			}
 			//m_ProcessedCV.wait(l, [this] () {return m_Processed; });
 			// Instruct thread to execute
 			//std::lock_guard<std::mutex> lg(m_mutex);
@@ -447,16 +450,16 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 		}
 	}
 
+	if (m_restart && m_resetTimerClock.getTimeMilliseconds() > 700) {
+		m_ragDoll->Start();
+		m_restart = false;
+	}
+
 	// Follow the RagDoll
 	m_cameraManager->SetCameraLocationX(m_ragDoll->GetLocation().x());
 }
 
 void ContactLearningApp::PreTickCallback(btScalar timestep) {
-
-	if (m_restart && m_resetTimerClock.getTimeMilliseconds() > 500) {
-		m_ragDoll->Start();
-		m_restart = false;
-	}
 
 	ContactManager::GetInstance().Update(timestep);
 	m_ragDoll->Loop();
