@@ -410,7 +410,9 @@ std::vector<float> RagDoll::GetOrientationsAndAngularVelocities() {
 }
 
 btVector3 RagDoll::GetTorsoLinearVelocity() {
-	return m_torso->GetRigidBody()->getLinearVelocity();
+	btVector3 torso_velocity = m_torso->GetRigidBody()->getLinearVelocity();
+	//printf("torso vel x: %f, y: %f \n", torso_velocity.x(), torso_velocity.y());
+	return torso_velocity;
 }
 
 std::pair<std::vector<btVector3>, std::vector<btVector3>> RagDoll::GetContactForces() {

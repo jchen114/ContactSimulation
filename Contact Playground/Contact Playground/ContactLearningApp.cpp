@@ -7,6 +7,7 @@
 #include <glui\glui.h>
 #include <functional>
 #include <iostream>
+#include <sstream>
 
 #include <stdexcept>
 
@@ -99,7 +100,10 @@ void ContactLearningApp::InitializePhysics() {
 	/* Threading */
 	// m_Ready = true;
 	m_dbSaver = std::thread(std::bind(&ContactLearningApp::DBWorkerThread, this));
-	m_Processed = true;
+	//m_Processed = true;
+
+	// Reset
+	m_restart = false;
 
 }
 
@@ -158,16 +162,39 @@ void ContactLearningApp::CreateBodies() {
 
 void ContactLearningApp::ManageTerrainCreation(){
 
-	btVector3 ragDollLocation = m_cameraManager->GetCameraLocation();
-	//printf("target.x= %f \n", target.x());
-	if (ragDollLocation.x() > m_groundEndPt.x() - 1.3f) {
-		CreateMoarTerrain();
+	// Only delete grounds up to the bipeds current standing ground.
+	
+	if (m_generationClock.getTimeMilliseconds() > 500) {
+
+		btVector3 ragDollLocation = m_cameraManager->GetCameraLocation();
+		//printf("target.x= %f \n", target.x());
+		if (ragDollLocation.x() > m_groundEndPt.x() - 1.3f) {
+			CreateMoarTerrain();
+		}
+
+		while (m_grounds.size() > 6) {
+			GameObject *currentGround = GetCurrentStandingGround();
+			GameObject *ground = m_grounds.front();
+			if (ground == currentGround) {
+				break;
+			}
+			else {
+				m_grounds.pop_front();
+				m_ground_idx -= 1;
+				// Remove from world
+				m_pWorld->removeRigidBody(ground->GetRigidBody());
+				// Remove from world objects
+				m_objects.erase(std::remove(m_objects.begin(), m_objects.end(), ground), m_objects.end());
+			}
+		}
+		m_generationClock.reset();
 	}
 
 }
 
 void ContactLearningApp::CreateMoarTerrain() {
 	std::vector<GameObject*> grounds = tc->CreateTerrains(m_groundEndPt);
+
 
 	for (auto const & value : grounds) {
 		m_objects.push_back(value);
@@ -191,7 +218,7 @@ void ContactLearningApp::CreateMoarTerrain() {
 
 void ContactLearningApp::ManageGroundCollisions() {
 	
-	if (m_ragDoll->GetLocation().x() > m_collisionEndPt.x() - 1.0f) {
+	if (m_ragDoll->GetLocation().x() > m_collisionEndPt.x() - 0.6f) {
 
 		for (int i = 0; i < 3; i++, m_ground_idx ++) {
 
@@ -214,6 +241,19 @@ void ContactLearningApp::ManageGroundCollisions() {
 
 		m_collisionEndPt = tr(btVector3(GROUND_WIDTH, 0, 0));
 	}
+}
+
+GameObject *ContactLearningApp::GetCurrentStandingGround() {
+	for (auto ground : m_collisionGrounds) {
+		btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
+		btVector3 relPos = tr(m_ragDoll->GetLocation());
+
+		if (relPos.x() >= -GROUND_WIDTH && relPos.x() < GROUND_WIDTH) {
+			//printf("Found Ground. \n");
+			return ground;
+		}
+	}
+	return nullptr;
 }
 
 void ContactLearningApp::Reset() {
@@ -263,9 +303,10 @@ void ContactLearningApp::SimulationEnd() {
 
 	// Reset the simulation.
 	m_ragDoll->Reset();
+	m_resetTimerClock.reset();
 	// Restart the simluation
-	m_ragDoll->Start();
-
+	//m_ragDoll->Start();
+	m_restart = true;
 }
 
 #pragma endregion INIT
@@ -354,6 +395,10 @@ void ContactLearningApp::DrawCallback() {
 
 }
 
+#pragma endregion DRAWING
+
+#pragma region SIM_CALLBACKS
+
 void ContactLearningApp::PostTickCallback(btScalar timestep) {
 
 	if (m_running) {
@@ -362,7 +407,7 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 			for (auto ground : m_collisionGrounds) {
 				btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
 				btVector3 relPos = tr(m_ragDoll->GetLocation());
-				if (relPos.x() > -GROUND_WIDTH - 1.0f && relPos.x() < GROUND_WIDTH + 1.0f) {
+				if (relPos.x() > -GROUND_WIDTH - 0.65f && relPos.x() < GROUND_WIDTH + 0.65f) {
 					m_ragDoll->AddCollisionWithGround(ground);
 				}
 				else {
@@ -383,15 +428,21 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 
 		// Check the sample clock for sampling
 		if (m_sampleClock.getTimeMilliseconds() > 500) {
-			printf("Save samples to DB\n");
+			//printf("Save samples to DB\n");
 			// Wait for worker to finish processing
+			SQL_DataWrapper dat = PushDataIntoQueue();
 			std::unique_lock <std::mutex> l(m_mutex);
-			m_ProcessedCV.wait(l, [this] () {return m_Processed; });
+			m_data.push_front(dat);
+			m_NotEmptyCV.notify_one();
+			l.unlock();
+			//m_ProcessedCV.wait(l, [this] () {return m_Processed; });
 			// Instruct thread to execute
 			//std::lock_guard<std::mutex> lg(m_mutex);
-			m_Ready = true;
-			m_ReadyCV.notify_one();
+			// Put Data into queue
+			//m_Ready = true;
+			//m_ReadyCV.notify_one();
 			//SaveSamplesToDB();
+
 			m_sampleClock.reset();
 		}
 	}
@@ -401,11 +452,17 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 }
 
 void ContactLearningApp::PreTickCallback(btScalar timestep) {
+
+	if (m_restart && m_resetTimerClock.getTimeMilliseconds() > 500) {
+		m_ragDoll->Start();
+		m_restart = false;
+	}
+
 	ContactManager::GetInstance().Update(timestep);
 	m_ragDoll->Loop();
 }
 
-#pragma endregion DRAWING
+#pragma region SIM_CALLBACKS
 
 #pragma region DATABASE
 
@@ -443,6 +500,7 @@ void ContactLearningApp::InitializeDB() {
 		"RF_FORCES NOT NULL, " \
 		"LF_FORCES NOT NULL, " \
 		"GROUND_STIFFNESS, " \
+		"GROUND_DAMPING, " \
 		"GROUND_SLOPE); ";
 
 	rc = sqlite3_exec(m_samplesdb, sql_stmt, NULL, 0, &zErrorMsg);
@@ -478,10 +536,10 @@ void ContactLearningApp::InitializeDB() {
 
 }
 
-void ContactLearningApp::SaveSamplesToDB() {
+void ContactLearningApp::SaveSamplesToDB(SQL_DataWrapper data) {
 	
-	std::vector<float> OsAndAVs = m_ragDoll->GetOrientationsAndAngularVelocities();
-	btVector3 torsoLV = m_ragDoll->GetTorsoLinearVelocity();
+	btVector3 torsoLV = data.m_TORSO_LV;
+	std::vector<float> OsAndAVs = data.m_OsAndAVS;
 
 	// Save data into database
 	char *zErrMsg = 0;
@@ -494,9 +552,9 @@ void ContactLearningApp::SaveSamplesToDB() {
 		printf("Insert into states prepare response: %s \n", sqlite3_errstr(rc));
 	}
 
-	char buff[100];
-	sprintf_s(buff, "%f, %f", torsoLV.x(), torsoLV.y());
-	sqlite3_bind_text(pStmt, 1, buff, 100, SQLITE_TRANSIENT);
+	std::stringstream ss;
+	ss << data.m_TORSO_LV.x() << ", " << data.m_TORSO_LV.y();
+	sqlite3_bind_text(pStmt, 1, ss.str().c_str(), -1, SQLITE_TRANSIENT);
 
 	for (int i = 2; i < 16; i++) {
 		sqlite3_bind_double(pStmt, i, OsAndAVs.at(i - 2));
@@ -512,27 +570,14 @@ void ContactLearningApp::SaveSamplesToDB() {
 	BuildStringFromForces(rf_forces_str, rightFootForces);
 	BuildStringFromForces(lf_forces_str, leftFootForces);
 
-	sqlite3_bind_text(pStmt, 16, rf_forces_str.c_str(), 300, SQLITE_TRANSIENT);
-	sqlite3_bind_text(pStmt, 17, lf_forces_str.c_str(), 300, SQLITE_TRANSIENT);
+	sqlite3_bind_text(pStmt, 16, rf_forces_str.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(pStmt, 17, lf_forces_str.c_str(), -1, SQLITE_TRANSIENT);
 
-	// Determine which ground Rag Doll is over.
-	float stiffness = 0.0f;
-	float damping = 0.0f;
+	//printf("Save stiffness = %f, damping = %f, slope = %f \n", data.m_GROUND_STIFFNESS, data.m_GROUND_DAMPING, data.m_GROUND_SLOPE);
 
-	for (auto ground : m_collisionGrounds) {
-		btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
-		btVector3 relPos = tr(m_ragDoll->GetLocation());
-
-		if (relPos.x() >= -GROUND_WIDTH && relPos.x() < GROUND_WIDTH) {
-			CollideeObject obj = ContactManager::GetInstance().m_toCollideWith.find(ground)->second;
-			std::tuple<float, float> gps = obj.GetGroundProperties();
-			stiffness = std::get<0>(gps);
-			damping = std::get<1>(gps);
-		}
-	}
-
-	sqlite3_bind_double(pStmt, 18, stiffness);
-	sqlite3_bind_double(pStmt, 19, damping);
+	sqlite3_bind_double(pStmt, 18, data.m_GROUND_STIFFNESS);
+	sqlite3_bind_double(pStmt, 19, data.m_GROUND_DAMPING);
+	sqlite3_bind_double(pStmt, 20, data.m_GROUND_SLOPE);
 
 	rc = sqlite3_step(pStmt);
 
@@ -545,20 +590,20 @@ void ContactLearningApp::SaveSamplesToDB() {
 	// Get the most recent ID inserted
 	int rowId = sqlite3_last_insert_rowid(m_samplesdb);
 	printf("row ID: %d\n", rowId);
-	SaveSequenceToDB(rowId);
+	SaveSequenceToDB(data.m_SEQUENCE_ID, rowId, data.m_SEQ_ORDER);
 
 }
 
-void ContactLearningApp::SaveSequenceToDB(int rowId) {
+void ContactLearningApp::SaveSequenceToDB(int sequenceNumber, int rowId, int order) {
 
 	char *zErrMsg = 0;
 	int rc;
 	sqlite3_stmt *pStmt;
 	rc = sqlite3_prepare(m_samplesdb, m_insert_sequences_cmd, -1, &pStmt, 0);
 
-	sqlite3_bind_int(pStmt, 1, m_sequenceNumber);
+	sqlite3_bind_int(pStmt, 1, sequenceNumber);
 	sqlite3_bind_int(pStmt, 2, rowId);
-	sqlite3_bind_int(pStmt, 3, m_order ++);
+	sqlite3_bind_int(pStmt, 3, order);
 
 	rc = sqlite3_step(pStmt);
 	if (rc != 101) {
@@ -574,17 +619,68 @@ void ContactLearningApp::DBWorkerThread() {
 	while (true) {
 		//printf("Inside while loop and waiting. \n");
 		std::unique_lock<std::mutex> ul(m_mutex);
-		m_ReadyCV.wait(ul, [this] () {return m_Ready; });
+		while (m_data.size() <= 0) {
+			m_NotEmptyCV.wait(ul);
+		}
+		SQL_DataWrapper dat = m_data.back();
+		m_data.pop_back();
+		ul.unlock();
+		//m_ReadyCV.wait(ul, [this] () {return m_Ready; });
 		//printf("Condition passed. \n");
-		m_Processed = false;
+		//m_Processed = false;
 		//std::cout << "Worker thread processing data. " << std::endl;
-		SaveSamplesToDB();
-		m_Processed = true;
-		m_Ready = false;
+		SaveSamplesToDB(dat);
+		//m_Processed = true;
+		//m_Ready = false;
 		//ul.unlock();
-		m_ProcessedCV.notify_one();
+		//m_ProcessedCV.notify_one();
 	}
 
+}
+
+SQL_DataWrapper ContactLearningApp::PushDataIntoQueue() {
+
+	btVector3 torsoLV = m_ragDoll->GetTorsoLinearVelocity();
+
+	std::vector<float> OsAndAVs = m_ragDoll->GetOrientationsAndAngularVelocities();
+	auto forces = m_ragDoll->GetContactForces();
+
+	// Determine which ground Rag Doll is over.
+	float stiffness = 0.0f;
+	float damping = 0.0f;
+	float slope = 0.0f;
+
+	for (auto ground : m_collisionGrounds) {
+		btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
+		btVector3 relPos = tr(m_ragDoll->GetLocation());
+
+		if (relPos.x() >= -GROUND_WIDTH && relPos.x() < GROUND_WIDTH) {
+			//printf("Found Ground. \n");
+			CollideeObject obj = ContactManager::GetInstance().m_toCollideWith.find(ground)->second;
+			std::tuple<float, float> gps = obj.GetGroundProperties();
+			stiffness = std::get<0>(gps);
+			damping = std::get<1>(gps);
+			slope = obj.m_object->GetOrientation();
+			//printf("stiffness = %f, damping = %f, slope = %f \n", stiffness, damping, slope);
+			break;
+		}
+	}
+
+	//printf("stiffness = %f, damping = %f, slope = %f \n", stiffness, damping, slope);
+
+	SQL_DataWrapper dat(
+		torsoLV,
+		OsAndAVs,
+		std::get<0>(forces),
+		std::get<1>(forces),
+		stiffness,
+		damping,
+		slope,
+		m_sequenceNumber,
+		m_order ++
+		);
+	
+	return dat;
 }
 
 #pragma endregion DATABASE

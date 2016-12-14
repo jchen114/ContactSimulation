@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "TerrainCreator.h"
-
+#include <tuple>
 
 TerrainCreator::TerrainCreator(float mean_length, float std_dev, float height, float depth, float slope_min, float slope_max)
 {

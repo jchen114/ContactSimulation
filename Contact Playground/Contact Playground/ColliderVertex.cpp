@@ -501,7 +501,11 @@ void ColliderVertex::DrawForce() {
 		glLineWidth(3.0f);
 		glBegin(GL_LINES);
 		glVertex3f(m_newOffset.x(), m_newOffset.y(), 0.1);
-		glVertex3f(m_newOffset.x() + m_reactionForce.x(), m_newOffset.y() + m_reactionForce.y(), 0.0f);
+		glVertex3f(
+			m_newOffset.x() + 0.02 * m_reactionForce.x(), 
+			m_newOffset.y() + 0.02 * m_reactionForce.y(), 
+			0.0f
+			);
 		glEnd();
 		glPopMatrix();
 	}

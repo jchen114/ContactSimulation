@@ -53,6 +53,7 @@ int ContactManager::RemoveObjectForCollision(GameObject *object) {
 
 int ContactManager::RemoveObjectToCollideWith(GameObject *object) {
 	// TODO
+	m_toCollideWith.erase(object);
 	return 0;
 }
 
