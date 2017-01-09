@@ -102,7 +102,7 @@ public:
 	bool m_disabled = true;
 
 	// Get Data
-	std::vector<float> GetOrientationsAndAngularVelocities();
+	std::vector<std::tuple<float, float, float>> GetDsOsAVs();
 	btVector3 GetTorsoLinearVelocity();
 	std::pair<std::vector<btVector3>, std::vector<btVector3>> GetContactForces();
 

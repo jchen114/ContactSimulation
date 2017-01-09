@@ -3,13 +3,14 @@
 #include <LinearMath\btVector3.h>
 #include <string>
 #include <vector>
+#include <tuple>
 
 class SQL_DataWrapper
 {
 public:
 	SQL_DataWrapper(
 		const btVector3 &TORSO_LV,
-		std::vector<float> OsAndAVs,
+		std::vector<std::tuple<float, float, float>> DsOsAVs,
 		std::vector<btVector3> RF_FORCES,
 		std::vector<btVector3> LF_FORCES,
 		float GROUND_STIFFNESS,
@@ -22,7 +23,7 @@ public:
 	~SQL_DataWrapper();
 
 	btVector3 m_TORSO_LV;
-	std::vector<float> m_OsAndAVS;
+	std::vector<std::tuple<float, float, float>> m_DsOsAVS;
 	btVector3 m_RF_FORCES;
 	btVector3 m_LF_FORCES;
 	float m_GROUND_STIFFNESS;

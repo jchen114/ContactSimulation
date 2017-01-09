@@ -22,7 +22,7 @@ class TactileController;
 class ColliderObject;
 class TerrainCreator;
 
-#define GROUND_WIDTH 3
+#define GROUND_WIDTH 2
 #define GROUND_HEIGHT 0.25f
 #define GROUND_DEPTH 1.0f
 #define ORIG_POS_FEELER btVector3(5, 2, 0)
@@ -126,19 +126,27 @@ static int NumSequencesCallback(void *data, int argc, char **argv, char **azColN
 
 const char *m_insert_states_sql_cmd = "INSERT INTO STATES(" \
 "ID, " \
-"TORSO_LV, " \
+"TORSO_LV_X, " \
+"TORSO_LV_Y, " \
+"TORSO_D, " \
 "TORSO_O, " \
 "TORSO_AV, " \
+"URL_D, " \
 "URL_O," \
 "URL_AV, " \
+"ULL_D, " \
 "ULL_O, " \
 "ULL_AV, " \
+"LRL_D, " \
 "LRL_O, " \
 "LRL_AV, " \
+"LLL_D, " \
 "LLL_O, " \
 "LLL_AV, " \
+"RF_D, " \
 "RF_O, " \
-"RF_AV, "\
+"RF_AV, " \
+"LF_D, " \
 "LF_O, " \
 "LF_AV, " \
 "RF_FORCES, " \
@@ -146,7 +154,7 @@ const char *m_insert_states_sql_cmd = "INSERT INTO STATES(" \
 "GROUND_STIFFNESS, " \
 "GROUND_DAMPING, " \
 "GROUND_SLOPE)" \
-"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+"VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? , ?, ?, ?, ?, ? )";
 
 const char *m_insert_sequences_cmd = "INSERT INTO SEQUENCES(" \
 "SEQUENCE_ID, " \
