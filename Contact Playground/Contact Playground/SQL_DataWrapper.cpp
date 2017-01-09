@@ -5,7 +5,7 @@
 
 SQL_DataWrapper::SQL_DataWrapper(
 	const btVector3 &TORSO_LV,
-	std::vector<float> OsAndAVs,
+	std::vector<std::tuple<float, float, float>> DsOsAVs,
 	std::vector<btVector3> RF_FORCES,
 	std::vector<btVector3> LF_FORCES,
 	float GROUND_STIFFNESS,
@@ -17,7 +17,7 @@ SQL_DataWrapper::SQL_DataWrapper(
 {
 
 	m_TORSO_LV = TORSO_LV;
-	m_OsAndAVS = OsAndAVs;
+	m_DsOsAVS = DsOsAVs;
 	std::vector<btVector3> m_RF_FORCES = RF_FORCES;
 	std::vector<btVector3> m_LF_FORCES = LF_FORCES;
 	m_GROUND_STIFFNESS = GROUND_STIFFNESS;
@@ -25,8 +25,6 @@ SQL_DataWrapper::SQL_DataWrapper(
 	m_GROUND_SLOPE = GROUND_SLOPE;
 	m_SEQUENCE_ID = SEQUENCE_ID;
 	m_SEQ_ORDER = SEQ_ORDER;
-
-	//printf("SQL DATA Wrapper Stiffness = %f, Damping = %f, Slope = %f\n", GROUND_STIFFNESS, GROUND_DAMPING, GROUND_SLOPE);
 
 }
 

@@ -433,19 +433,15 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 		if (m_sampleClock.getTimeMilliseconds() > 500) {
 			if (ContactManager::GetInstance().m_beingUsed) {
 				SQL_DataWrapper dat = PushDataIntoQueue();
-				std::unique_lock <std::mutex> l(m_mutex);
-				m_data.push_front(dat);
-				m_NotEmptyCV.notify_one();
-				l.unlock();
-			}
-			//m_ProcessedCV.wait(l, [this] () {return m_Processed; });
-			// Instruct thread to execute
-			//std::lock_guard<std::mutex> lg(m_mutex);
-			// Put Data into queue
-			//m_Ready = true;
-			//m_ReadyCV.notify_one();
-			//SaveSamplesToDB();
 
+				if (dat.m_GROUND_STIFFNESS != 0.0f) {
+					std::unique_lock <std::mutex> l(m_mutex);
+					m_data.push_front(dat);
+					m_NotEmptyCV.notify_one();
+					l.unlock();
+				}
+
+			}
 			m_sampleClock.reset();
 		}
 	}
@@ -485,23 +481,31 @@ void ContactLearningApp::InitializeDB() {
 	char *zErrorMsg;
 	sql_stmt = "CREATE TABLE IF NOT EXISTS STATES("	\
 		"ID INTEGER PRIMARY KEY NOT NULL," \
-		"TORSO_LV TEXT NOT NULL, " \
+		"TORSO_LV_X REAL NOT NULL, " \
+		"TORSO_LV_Y REAL NOT NULL," \
+		"TORSO_D REAL NOT NULL," \
 		"TORSO_O REAL NOT NULL," \
 		"TORSO_AV REAL NOT NULL, " \
+		"URL_D REAL NOT NULL," \
 		"URL_O REAL NOT NULL, " \
 		"URL_AV REAL NOT NULL, " \
+		"ULL_D REAL NOT NULL," \
 		"ULL_O REAL NOT NULL, " \
 		"ULL_AV REAL NOT NULL, " \
+		"LRL_D REAL NOT NULL," \
 		"LRL_O REAL NOT NULL, " \
 		"LRL_AV REAL NOT NULL, " \
+		"LLL_D REAL NOT NULL," \
 		"LLL_O REAL NOT NULL, " \
 		"LLL_AV REAL NOT NULL, " \
+		"RF_D REAL NOT NULL," \
 		"RF_O REAL NOT NULL, " \
 		"RF_AV REAL NOT NULL, " \
+		"LF_D REAL NOT NULL," \
 		"LF_O REAL NOT NULL, " \
 		"LF_AV REAL NOT NULL, " \
-		"RF_FORCES NOT NULL, " \
-		"LF_FORCES NOT NULL, " \
+		"RF_FORCES TEXT NOT NULL, " \
+		"LF_FORCES TEXT NOT NULL, " \
 		"GROUND_STIFFNESS, " \
 		"GROUND_DAMPING, " \
 		"GROUND_SLOPE); ";
@@ -542,7 +546,7 @@ void ContactLearningApp::InitializeDB() {
 void ContactLearningApp::SaveSamplesToDB(SQL_DataWrapper data) {
 	
 	btVector3 torsoLV = data.m_TORSO_LV;
-	std::vector<float> OsAndAVs = data.m_OsAndAVS;
+	auto DsOsAVs = data.m_DsOsAVS;
 
 	// Save data into database
 	char *zErrMsg = 0;
@@ -555,12 +559,19 @@ void ContactLearningApp::SaveSamplesToDB(SQL_DataWrapper data) {
 		printf("Insert into states prepare response: %s \n", sqlite3_errstr(rc));
 	}
 
-	std::stringstream ss;
-	ss << data.m_TORSO_LV.x() << ", " << data.m_TORSO_LV.y();
-	sqlite3_bind_text(pStmt, 1, ss.str().c_str(), -1, SQLITE_TRANSIENT);
+	int bind_idx = 1;
 
-	for (int i = 2; i < 16; i++) {
-		sqlite3_bind_double(pStmt, i, OsAndAVs.at(i - 2));
+	sqlite3_bind_double(pStmt, bind_idx ++, data.m_TORSO_LV.x());
+	sqlite3_bind_double(pStmt, bind_idx++, data.m_TORSO_LV.y());
+
+	// BIND Distances Orientations and Angular Velocities
+	for (auto tuple : DsOsAVs) {
+		float distance = std::get<0>(tuple);
+		float orientation = std::get<1>(tuple);
+		float AV = std::get<2>(tuple);
+		sqlite3_bind_double(pStmt, bind_idx++, distance);
+		sqlite3_bind_double(pStmt, bind_idx++, orientation);
+		sqlite3_bind_double(pStmt, bind_idx++, AV);
 	}
 
 	auto forces = m_ragDoll->GetContactForces();
@@ -573,14 +584,14 @@ void ContactLearningApp::SaveSamplesToDB(SQL_DataWrapper data) {
 	BuildStringFromForces(rf_forces_str, rightFootForces);
 	BuildStringFromForces(lf_forces_str, leftFootForces);
 
-	sqlite3_bind_text(pStmt, 16, rf_forces_str.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(pStmt, 17, lf_forces_str.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(pStmt, bind_idx++, rf_forces_str.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(pStmt, bind_idx++, lf_forces_str.c_str(), -1, SQLITE_TRANSIENT);
 
 	//printf("Save stiffness = %f, damping = %f, slope = %f \n", data.m_GROUND_STIFFNESS, data.m_GROUND_DAMPING, data.m_GROUND_SLOPE);
 
-	sqlite3_bind_double(pStmt, 18, data.m_GROUND_STIFFNESS);
-	sqlite3_bind_double(pStmt, 19, data.m_GROUND_DAMPING);
-	sqlite3_bind_double(pStmt, 20, data.m_GROUND_SLOPE);
+	sqlite3_bind_double(pStmt, bind_idx++, data.m_GROUND_STIFFNESS);
+	sqlite3_bind_double(pStmt, bind_idx++, data.m_GROUND_DAMPING);
+	sqlite3_bind_double(pStmt, bind_idx++, data.m_GROUND_SLOPE);
 
 	rc = sqlite3_step(pStmt);
 
@@ -645,7 +656,7 @@ SQL_DataWrapper ContactLearningApp::PushDataIntoQueue() {
 
 	btVector3 torsoLV = m_ragDoll->GetTorsoLinearVelocity();
 
-	std::vector<float> OsAndAVs = m_ragDoll->GetOrientationsAndAngularVelocities();
+	std::vector<std::tuple<float, float, float>> DsOsAVs = m_ragDoll->GetDsOsAVs();
 	auto forces = m_ragDoll->GetContactForces();
 
 	// Determine which ground Rag Doll is over.
@@ -671,18 +682,19 @@ SQL_DataWrapper ContactLearningApp::PushDataIntoQueue() {
 
 	//printf("stiffness = %f, damping = %f, slope = %f \n", stiffness, damping, slope);
 
+
 	SQL_DataWrapper dat(
 		torsoLV,
-		OsAndAVs,
+		DsOsAVs,
 		std::get<0>(forces),
 		std::get<1>(forces),
 		stiffness,
 		damping,
 		slope,
 		m_sequenceNumber,
-		m_order ++
+		m_order++
 		);
-	
+
 	return dat;
 }
 

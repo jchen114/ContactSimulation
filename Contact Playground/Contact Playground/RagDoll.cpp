@@ -266,8 +266,6 @@ void RagDoll::CreateRagDoll(const btVector3 &position) {
 
 	//m_bodies = { m_torso };
 
-	
-
 }
 
 void RagDoll::AddHinges() {
@@ -396,24 +394,34 @@ btVector3 RagDoll::GetLocation() {
 	return m_torso->GetCOMPosition();
 }
 
-std::vector<float> RagDoll::GetOrientationsAndAngularVelocities() {
+std::vector<std::tuple<float, float, float>> RagDoll::GetDsOsAVs() {
 
-	return std::vector<float> {
-		m_torso->GetOrientation(),
-		m_torso->GetAngularVelocity(),
-		m_upperRightLeg->GetOrientation(),
-		m_upperRightLeg->GetAngularVelocity(),
-		m_upperLeftLeg->GetOrientation(),
-		m_upperLeftLeg->GetAngularVelocity(),
-		m_lowerRightLeg->GetOrientation(),
-		m_lowerRightLeg->GetAngularVelocity(),
-		m_lowerLeftLeg->GetOrientation(),
-		m_lowerLeftLeg->GetAngularVelocity(),
-		m_rightFoot->GetOrientation(),
-		m_rightFoot->GetAngularVelocity(),
-		m_leftFoot->GetOrientation(),
-		m_leftFoot->GetAngularVelocity()
+	std::vector<GameObject *> objs = {
+		m_torso, m_upperRightLeg, m_upperLeftLeg, m_lowerRightLeg, m_lowerLeftLeg, m_rightFoot, m_leftFoot
 	};
+
+	std::vector<std::tuple<float, float, float>> DsOSAvs;
+	// Hip position is where the bottom of torso is.
+	btTransform tr;
+	m_torso->GetRigidBody()->getMotionState()->getWorldTransform(tr);
+	btVector3 hipPosition = tr(btVector3(0, -torso_height / 2, 0));
+
+	for (auto obj : objs) {
+
+		// Calculate distance from object to hip.
+		btVector3 objCOM = obj->GetCOMPosition();
+		btVector3 vecDiff = objCOM - hipPosition;
+		float distance = vecDiff.norm();
+		// Get Orientation
+		float orientation = obj->GetOrientation();
+		// Get Angular Velocity
+		float AV = obj->GetAngularVelocity();
+		std::tuple<float, float, float> tuple = std::make_tuple(distance, orientation, AV);
+		DsOSAvs.push_back(tuple);
+	}
+	
+	return DsOSAvs;
+
 }
 
 btVector3 RagDoll::GetTorsoLinearVelocity() {
@@ -1060,6 +1068,12 @@ bool RagDoll::DrawShape(btScalar *transform, const btCollisionShape *pShape, con
 	else {
 		takenCareOf = false;
 	}
+
+	//btTransform tr;
+	//m_torso->GetRigidBody()->getMotionState()->getWorldTransform(tr);
+	//btVector3 hipPosition = tr(btVector3(0, -torso_height / 2, 0));
+
+	//DrawFilledCircle(hipPosition.x(), hipPosition.y(), 0.03, btVector3(255, 0, 0));
 
 	return takenCareOf;
 
