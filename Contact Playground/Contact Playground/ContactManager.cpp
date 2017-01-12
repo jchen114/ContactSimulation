@@ -45,6 +45,13 @@ CollideeObject *ContactManager::AddObjectToCollideWith(GameObject *object, float
 	return collideeObject;
 }
 
+CollideeObject *ContactManager::AddGroundToCollideWith(GameObject *object, float ground_stiffness, float ground_damping, float friction) {
+	CollideeObject *collideeObject = new CollideeObject(object, OBJECT_OF_INTEREST, friction, ground_stiffness, ground_damping);
+	m_toCollideWith.insert({ object, *collideeObject });
+	printf("Add Ground to collide with size: %d\n", m_toCollideWith.size());
+	return collideeObject;
+}
+
 int ContactManager::RemoveObjectForCollision(GameObject *object) {
 	// TODO
 	m_forCollision.erase(object);

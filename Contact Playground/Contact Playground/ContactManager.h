@@ -30,6 +30,8 @@ public:
 	ColliderObject *AddObjectForCollision(GameObject *object, int numberOfVertices = 2);
 	CollideeObject *AddObjectToCollideWith(GameObject *object, float friction = 0.7f);
 
+	CollideeObject *AddGroundToCollideWith(GameObject *object, float ground_stiffness, float ground_damping, float friction = 0.7f);
+
 	int RemoveObjectForCollision(GameObject *object);
 	int RemoveObjectToCollideWith(GameObject *object);
 

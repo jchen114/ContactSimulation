@@ -24,6 +24,7 @@ public:
 		float friction_coeff=2.0f, 
 		float ground_stiffness=2500.0f, 
 		float ground_damping=250.0f);
+
 	~CollideeObject();
 
 	void *m_userPointer;
