@@ -8,12 +8,13 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
-
+#include <ctime>
 #include <stdexcept>
 
 #include "TerrainCreator.h"
 
-std::string db_path = "..\\..\\Data\\samples.db";
+//std::string db_path = "..\\..\\Data\\samples.db";
+std::string db_path = "..\\..\\Data\\samples_w_compliance.db";
 
 #include "sqlite3.h"
 
@@ -38,6 +39,8 @@ ContactLearningApp::ContactLearningApp(ProjectionMode mode) : BulletOpenGLApplic
 	m_DrawCallback = std::bind(&ContactLearningApp::DrawCallback, this);
 
 	tc = std::unique_ptr<TerrainCreator>(new TerrainCreator(GROUND_WIDTH, 0.001f, GROUND_HEIGHT, GROUND_DEPTH));
+
+	srand(time(NULL));
 }
 
 ContactLearningApp *ContactLearningApp::GetInstance() {
@@ -228,7 +231,16 @@ void ContactLearningApp::ManageGroundCollisions() {
 			}
 			else {
 				m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
-				ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
+				//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
+				// Generate number between 1000 and 3000
+				int rand_stiffness = rand() % 2000 + 1000;
+				float rand_damping = (float)rand_stiffness / 10.0f;
+				printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
+				ContactManager::GetInstance().AddGroundToCollideWith(
+					m_grounds.at(m_ground_idx), 
+					(float) rand_stiffness, 
+					(float) rand_damping, 
+					3.0f);
 			}
 		}
 		while (m_collisionGrounds.size() > 5) {
@@ -280,7 +292,15 @@ void ContactLearningApp::Reset() {
 
 	for (m_ground_idx = 0; m_ground_idx < 3; m_ground_idx++) {
 		m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
-		ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
+		//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
+		int rand_stiffness = rand() % 2000 + 1000;
+		float rand_damping = (float)rand_stiffness / 10.0f;
+		printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
+		ContactManager::GetInstance().AddGroundToCollideWith(
+			m_grounds.at(m_ground_idx),
+			(float)rand_stiffness,
+			(float)rand_damping,
+			3.0f);
 	}
 
 	btTransform tr;
