@@ -1,0 +1,299 @@
+import sqlite3
+import copy
+import cPickle as pickle
+import math
+import numpy as np
+
+
+def initialize_db_connection(db_file):
+	conn = sqlite3.connect(db_file)
+	return conn
+
+
+def get_number_of_sequences(db_conn):
+	cursor = db_conn.cursor()
+	cursor.execute("SELECT MAX(SEQUENCE_ID) FROM SEQUENCES")
+	num_sequences = cursor.fetchone()
+	return num_sequences
+
+
+def get_sequence(db_conn, sequence_id):
+	cursor = db_conn.cursor()
+	cursor.execute("SELECT STATE_ID FROM SEQUENCES WHERE SEQUENCE_ID = {SID} ORDER BY SEQ_ORDER ASC".format(SID=sequence_id))
+	state_ids = cursor.fetchall()
+	#print len(results)
+	return state_ids
+
+
+def get_normalized_states_from_state_ids(db_conn, state_ids):
+	cursor = db_conn.cursor()
+
+	sequences = list()
+	targets = list()
+
+	for id in state_ids:
+		cursor.execute("SELECT * FROM STATES WHERE ID = {SID}".format(SID=id['STATE_ID']))
+		state = cursor.fetchone()
+		if state['GROUND_STIFFNESS'] == 0.0:
+			continue
+		feature, label = build_feature_vec(state, db_conn=db_conn)
+
+		sequences.append(feature)
+		targets.append(label[0]) # Only retrieve slope
+
+	return sequences, targets
+
+
+def get_differenced_states_from_state_ids(db_conn, state_ids, normalize=True, forces=False):
+
+	cursor = db_conn.cursor()
+
+	data = list()
+	labels = list()
+
+	force_data = list()
+
+	means = None
+	variances = None
+	if normalize:
+		means, variances = get_means_variances(db_conn)
+
+	first_id = state_ids[0]
+	cursor.execute("SELECT * FROM STATES WHERE ID = {SID}".format(SID=first_id['STATE_ID']))
+	prev_state = cursor.fetchone()
+	prev_vector, _ = vectorize_state(prev_state, means, variances)
+	for id in state_ids[1:]:
+		cursor.execute("SELECT * FROM STATES WHERE ID = {SID}".format(SID=id['STATE_ID']))
+		curr_state = cursor.fetchone()
+		if curr_state['GROUND_STIFFNESS'] == 0.0:
+			continue
+		curr_vector, forces = vectorize_state(curr_state, means, variances, forces)
+		data.append(np.subtract(curr_vector, prev_vector))
+		labels.append(
+			(
+				float(curr_state['GROUND_SLOPE']),
+			 	float(curr_state['GROUND_STIFFNESS']),
+			 	float(curr_state['GROUND_DAMPING'])
+			 )
+		)
+		force_data.append(forces)
+	return data, labels, force_data
+
+
+def vectorize_state(state, means, variances, include_forces=False):
+	vector = list()
+	forces = (list(), list())
+	if include_forces:
+		# TODO
+		#print 'Include forces'
+		lf_forces = [float(f) for force in state['LF_FORCES'].split('|') for f in force.split(',')]
+		rf_forces = [float(f) for force in state['RF_FORCES'].split('|') for f in force.split(',')]
+		for i in range(0, len(lf_forces)):
+			lf_force = standardize_data(lf_forces[i], means['LF_FORCES'][i], variances['LF_FORCES'][i])
+			rf_force = standardize_data(rf_forces[i], means['RF_FORCES'][i], variances['RF_FORCES'][i])
+			forces[0].append(lf_force)
+			forces[1].append(rf_force)
+
+	for k in state.keys():
+		if k == 'LF_FORCES' \
+			or k == 'RF_FORCES' \
+			or k == 'ID' \
+			or k == 'GROUND_DAMPING' \
+			or k == 'GROUND_SLOPE' \
+			or k == 'GROUND_STIFFNESS':
+			continue
+		feature = float(state[k])
+		if means and variances:
+			feature = standardize_data(feature, means[k], variances[k])
+		vector.append(feature)
+	return np.asarray(vector), forces
+
+
+def prepare_data_for_sequences(data, labels, seq_length, full_sequence=True):
+	sequences = list()
+	targets = list()
+	for i in range(0, len(data) - seq_length + 1):
+		sequence = data[i: i + seq_length]
+		if full_sequence:
+			seq_labels = [[label] for label in labels[i:i+seq_length]]
+			targets.append(seq_labels)
+		else:
+			targets.append([labels[seq_length - 1]])
+		sequences.append(sequence)
+	return sequences, targets
+
+
+def prepare_forces_sequences(forces, seq_length):
+	lf_force_sequence = list()
+	rf_force_sequence = list()
+	lf_forces, rf_forces = zip(*forces)
+	for i in range (0, len(forces) - seq_length + 1):
+		lf_force_sequence.append(lf_forces[i : i + seq_length])
+		rf_force_sequence.append(rf_forces[i : i + seq_length])
+	return lf_force_sequence, rf_force_sequence
+
+def get_means_variances(db_conn):
+
+	try:
+		means = pickle.load(open('means.p', 'rb'))
+		variances = pickle.load(open('variances.p', 'rb'))
+	except Exception as e:
+		cursor = db_conn.cursor()
+		means = {
+			'TORSO_LV_X': 0.0,
+			'TORSO_LV_Y': 0.0,
+			'TORSO_D': 0.0,
+			'TORSO_O': 0.0,
+			'TORSO_AV': 0.0,
+			'URL_D': 0.0,
+			'URL_O': 0.0,
+			'URL_AV': 0.0,
+			'ULL_D': 0.0,
+			'ULL_O': 0.0,
+			'ULL_AV': 0.0,
+			'LRL_D': 0.0,
+			'LRL_O': 0.0,
+			'LRL_AV': 0.0,
+			'LLL_D': 0.0,
+			'LLL_O': 0.0,
+			'LLL_AV': 0.0,
+			'RF_D': 0.0,
+			'RF_O': 0.0,
+			'RF_AV': 0.0,
+			'LF_D': 0.0,
+			'LF_O': 0.0,
+			'LF_AV': 0.0,
+			'LF_FORCES': [0.0] * 44,
+			'RF_FORCES': [0.0] * 44
+		}
+		variances = copy.deepcopy(means)
+
+		# Iterate through entire table states and update the means
+		cursor.execute('SELECT * FROM STATES')
+		n = 1
+		for row in cursor:
+			lf_forces = [float(f) for force in row['LF_FORCES'].split('|') for f in force.split(',')]
+			rf_forces = [float(f) for force in row['RF_FORCES'].split('|') for f in force.split(',')]
+
+			for force in range(0, len(lf_forces)):
+
+				LF_old_mean = means['LF_FORCES'][force]
+				RF_old_mean = means['RF_FORCES'][force]
+				means['LF_FORCES'][force] = update_mean(means['LF_FORCES'][force], lf_forces[force], n)
+				means['RF_FORCES'][force] = update_mean(means['RF_FORCES'][force], rf_forces[force], n)
+
+				variances['LF_FORCES'][force] = update_var(variances['LF_FORCES'][force], lf_forces[force], LF_old_mean, means['LF_FORCES'][force])
+				variances['RF_FORCES'][force] = update_var(variances['RF_FORCES'][force], rf_forces[force], RF_old_mean, means['RF_FORCES'][force])
+
+			del row['LF_FORCES']
+			del row['RF_FORCES']
+
+			# Update means for the rest of the fields
+			for k in row:
+				if k == 'GROUND_DAMPING' \
+					or k == 'GROUND_STIFFNESS' \
+					or k == 'GROUND_SLOPE' \
+					or k == 'ID':
+					continue
+				old_mean = means[k]
+				means[k] = update_mean(means[k], row[k], n)
+				variances[k] = update_var(variances[k], row[k], old_mean, means[k])
+			n += 1
+
+		for k in variances:
+			if k == 'LF_FORCES' or k == 'RF_FORCES':
+				variances[k][:] = [v/(n-1) for v in variances[k]]
+			else:
+				variances[k] /= (n-1)
+
+		pickle.dump(means, open('means.p', 'wb'))
+		pickle.dump(variances, open('variances.p', 'wb'))
+	return means, variances
+
+
+def update_mean(old_mean, val, n):
+	return old_mean + (val - old_mean)/n
+
+
+def update_var(old_var, val, old_mean, new_mean):
+	return old_var + (val - old_mean) * (val - new_mean)
+
+
+def build_feature_vec(state, db_conn, include_forces=False):
+
+	feature_vec = list()
+	label_vec = list()
+
+	means, variances = get_means_variances(db_conn)
+
+	if include_forces:
+		lf_forces = [float(f) for force in state['LF_FORCES'].split('|') for f in force.split(',')]
+		rf_forces = [float(f) for force in state['RF_FORCES'].split('|') for f in force.split(',')]
+
+		std_lf_forces = list()
+		std_rf_forces = list()
+
+		for force in range (0, len(lf_forces)):
+			std_lf_forces[force] = standardize_data(lf_forces[force], means['LF_FORCES'][force], variances['LF_FORCES'][force])
+			std_rf_forces[force] = standardize_data(rf_forces[force], means['RF_FORCES'][force], variances['RF_FORCES'][force])
+
+	for k in means.keys():
+		if k == 'LF_FORCES' or k == 'RF_FORCES' or k == 'TORSO_LV_X' or k == 'TORSO_LV_Y':
+			continue
+		feature_vec.append(standardize_data(state[k], means[k], variances[k]))
+
+	label_vec.append(state['GROUND_SLOPE'])
+	label_vec.append(state['GROUND_STIFFNESS'])
+	label_vec.append(state['GROUND_DAMPING'])
+
+	return feature_vec, label_vec
+
+
+def standardize_data(dat, mean, variance):
+	if variance == 0:
+		return 0
+	return (dat - mean) / math.sqrt(variance)
+
+
+def dict_factory(cursor, row):
+	d = {}
+	for idx, col in enumerate(cursor.description):
+		d[col[0]] = row[idx]
+	return d
+
+
+def prepare_data(difference=True, include_forces=False):
+	db_connection = initialize_db_connection("samples_w_compliance.db")
+	db_connection.row_factory = dict_factory
+	num_sequences = get_number_of_sequences(db_connection)['MAX(SEQUENCE_ID)']
+	xs = list()
+	ys = list()
+	foot_forces = (list(), list())
+	for seq in range(1, num_sequences + 1):
+		state_ids = get_sequence(db_connection, seq)
+		forces = list()
+		if difference:
+			data, labels, forces = get_differenced_states_from_state_ids(db_connection, state_ids, forces=include_forces)
+		else:
+			data, labels = get_normalized_states_from_state_ids(db_connection, state_ids)
+		x, y = prepare_data_for_sequences(data, labels, seq_length=30, full_sequence=True)
+		if forces:
+			l_f, r_f = prepare_forces_sequences(forces, seq_length=30)
+			foot_forces[0].extend(l_f)
+			foot_forces[1].extend(r_f)
+		xs.extend(x)
+		ys.extend(y)
+	if difference:
+		pickle.dump(ys, open('SIMB_targets_diff.p', 'wb'))
+		pickle.dump(xs, open('SIMB_sequences_diff.p', 'wb'))
+		if foot_forces:
+			pickle.dump(foot_forces, open('SIMB_forces.p', 'wb'))
+	else:
+		pickle.dump(ys, open('SIMB_slopes_normalized.p', 'wb'))
+		pickle.dump(xs, open('SIMB_sequences_normalized.p', 'wb'))
+	db_connection.close()
+	return xs, ys
+
+if __name__ == "__main__":
+	prepare_data(difference=True, include_forces=True)
+
