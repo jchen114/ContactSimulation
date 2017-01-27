@@ -25,23 +25,35 @@ def get_sequence(db_conn, sequence_id):
 	return state_ids
 
 
-def get_normalized_states_from_state_ids(db_conn, state_ids):
+def get_normalized_states_from_state_ids(db_conn, state_ids, forces=False):
 	cursor = db_conn.cursor()
 
 	sequences = list()
 	targets = list()
+
+	force_data = list()
+
+	means, variances = get_means_variances(db_conn)
 
 	for id in state_ids:
 		cursor.execute("SELECT * FROM STATES WHERE ID = {SID}".format(SID=id['STATE_ID']))
 		state = cursor.fetchone()
 		if state['GROUND_STIFFNESS'] == 0.0:
 			continue
-		feature, label = build_feature_vec(state, db_conn=db_conn)
+
+		feature, feet_forces = vectorize_state(state, means=means, variances=variances, include_forces=forces)
 
 		sequences.append(feature)
-		targets.append(label[0]) # Only retrieve slope
+		targets.append(
+			(
+				float(standardize_data(state['GROUND_SLOPE'], means['GROUND_SLOPE'], variances['GROUND_SLOPE'])),
+				float(standardize_data(state['GROUND_STIFFNESS'], means['GROUND_STIFFNESS'], variances['GROUND_STIFFNESS']))
+			)
+		)
+		if feet_forces[0]: # If not empty
+			force_data.append(feet_forces)
 
-	return sequences, targets
+	return sequences, targets, force_data
 
 
 def get_differenced_states_from_state_ids(db_conn, state_ids, normalize=True, forces=False):
@@ -142,6 +154,7 @@ def get_means_variances(db_conn):
 		means = pickle.load(open('means.p', 'rb'))
 		variances = pickle.load(open('variances.p', 'rb'))
 	except Exception as e:
+		print ('Means and variances do not exist')
 		cursor = db_conn.cursor()
 		means = {
 			'TORSO_LV_X': 0.0,
@@ -266,7 +279,7 @@ def dict_factory(cursor, row):
 	return d
 
 
-def prepare_data(db_str, num_seq=None, difference=True, include_forces=False, dump=True):
+def prepare_data(db_str, num_seq=None, mode='difference', include_forces=False, dump=True):
 	db_connection = initialize_db_connection(db_str)
 	db_connection.row_factory = dict_factory
 	num_sequences = get_number_of_sequences(db_connection)['MAX(SEQUENCE_ID)']
@@ -278,10 +291,10 @@ def prepare_data(db_str, num_seq=None, difference=True, include_forces=False, du
 	for seq in range(1, num_seq):
 		state_ids = get_sequence(db_connection, seq)
 		forces = list()
-		if difference:
+		if mode=='difference':
 			data, labels, forces = get_differenced_states_from_state_ids(db_connection, state_ids, forces=include_forces)
-		else:
-			data, labels = get_normalized_states_from_state_ids(db_connection, state_ids)
+		elif mode=='normalize':
+			data, labels, forces = get_normalized_states_from_state_ids(db_connection, state_ids, forces=include_forces)
 		x, y = prepare_data_for_sequences(data, labels, seq_length=30, full_sequence=True)
 		if forces:
 			l_f, r_f = prepare_forces_sequences(forces, seq_length=30)
@@ -290,19 +303,19 @@ def prepare_data(db_str, num_seq=None, difference=True, include_forces=False, du
 		xs.extend(x)
 		ys.extend(y)
 	if dump:
-		if difference:
+		if mode=='difference':
 			pickle.dump(ys, open('SIMB_targets_diff.p', 'wb'))
 			pickle.dump(xs, open('SIMB_sequences_diff.p', 'wb'))
-			if foot_forces:
-				pickle.dump(foot_forces, open('SIMB_forces.p', 'wb'))
-		else:
-			pickle.dump(ys, open('SIMB_slopes_normalized.p', 'wb'))
+		elif mode == 'normalize':
+			pickle.dump(ys, open('SIMB_targets_normalized.p', 'wb'))
 			pickle.dump(xs, open('SIMB_sequences_normalized.p', 'wb'))
+		if include_forces:
+			pickle.dump(foot_forces, open('SIMB_forces.p', 'wb'))
 	db_connection.close()
-	return xs, ys
+	return xs, ys, foot_forces
 
 
-def data_generator(seq_length, db_connection, avg_window=4, sample_size=32, include_compliance=True, include_compliance_targets=True):
+def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sample_size=32, include_compliance=True, include_compliance_targets=True):
 	num_sequences = get_number_of_sequences(db_connection)['MAX(SEQUENCE_ID)']
 	# Get the size for each sequence?
 	sizes = list()
@@ -326,16 +339,24 @@ def data_generator(seq_length, db_connection, avg_window=4, sample_size=32, incl
 				# Start from random index in state_ids
 				start_idx = np.random.randint(low=0, high=len(state_ids) - seq_length)
 				state_ids = state_ids[start_idx:start_idx + seq_length]
-				data, labels, forces = get_differenced_states_from_state_ids(
-					db_connection,
-					state_ids,
-					forces=True
-				)
-
-				x, y = prepare_data_for_sequences(data, labels, seq_length=seq_length-1, full_sequence=True)
+				if mode == 'difference':
+					data, labels, forces = get_differenced_states_from_state_ids(
+						db_connection,
+						state_ids,
+						forces=True
+					)
+					x, y = prepare_data_for_sequences(data, labels, seq_length=seq_length - 1, full_sequence=True)
+					l_f, r_f = prepare_forces_sequences(forces, seq_length=seq_length - 1)
+				elif mode == 'normalize':
+					data, labels, forces = get_normalized_states_from_state_ids(
+						db_connection,
+						state_ids,
+						forces=True
+					)
+					x, y = prepare_data_for_sequences(data, labels, seq_length=seq_length, full_sequence=True)
+					l_f, r_f = prepare_forces_sequences(forces, seq_length=seq_length)
 				inputs = x
 				if include_compliance:
-					l_f, r_f = prepare_forces_sequences(forces, seq_length=seq_length - 1)
 					l_f = avg_down_foot_forces(l_f, avg_window=avg_window)
 					r_f = avg_down_foot_forces(r_f, avg_window=avg_window)
 					forces = np.concatenate((l_f, r_f), axis=2)  # Concatenate the forces
@@ -423,16 +444,20 @@ def unstandardize_data(data, mean, variance):
 
 if __name__ == "__main__":
 
-	prepare_data('samples_w_compliance_test.db', num_seq=30, difference=True, include_forces=True)
+	#prepare_data('samples_w_compliance_test.db', num_seq=30, difference=True, include_forces=True)
 
-	# db_connection = initialize_db_connection("samples_w_compliance.db")
-	# db_connection.row_factory = dict_factory
-	# generator = data_generator(
-	# 	seq_length=30,
-	# 	db_connection=db_connection,
-	# 	avg_window=4,
-	# 	sample_size=5
-	# )
+	db_connection = initialize_db_connection("samples_w_compliance.db")
+	db_connection.row_factory = dict_factory
+	generator = data_generator(
+		seq_length=30,
+		db_connection=db_connection,
+		mode='normalize',
+		avg_window=4,
+		sample_size=5
+	)
+
+	next(generator)
+
 	# v_db_connection = initialize_db_connection('samples_w_compliance_validation.db')
 	# v_db_connection.row_factory = dict_factory
 	# valid_gen = data_generator(
