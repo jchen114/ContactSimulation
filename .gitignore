@@ -319,3 +319,5 @@ fabric.properties
 
 # Ignore any pickle files.
 Data/**/*.p
+Dependencies/*
+Data/**/*.pyc
