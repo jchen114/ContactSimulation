@@ -1,6 +1,18 @@
 import sqlite3
 import copy
-import cPickle as pickle
+import sys
+maj = sys.version_info
+
+version = 2
+
+if maj[0] >= 3:
+	import _pickle as pickle
+	import importlib.machinery
+	import types
+	version = 3
+else:
+	import cPickle as pickle
+	import imp
 import math
 import numpy as np
 from random import shuffle

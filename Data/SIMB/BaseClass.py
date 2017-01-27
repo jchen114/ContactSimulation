@@ -3,6 +3,7 @@ from keras.models import load_model
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 import numpy as np
 
+
 class Base_Model:
 
 	def __init__(self, num_features, max_seq_length, save_substr, dir):
@@ -15,7 +16,7 @@ class Base_Model:
 		self.loaded = False
 		for f in files:
 			if f.startswith(save_substr):
-				print f
+				print(f)
 				self.model = load_model(f)
 				self.loaded = True
 				break
