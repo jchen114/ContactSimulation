@@ -27,7 +27,7 @@ class Base_Model:
 			checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='auto')
 			earlyStopping = EarlyStopping(
 				monitor='val_loss',
-				patience=60
+				patience=20
 			)
 			callbacks = [checkpoint, earlyStopping]
 
@@ -37,7 +37,7 @@ class Base_Model:
 				nb_epoch=nb_epoch,
 				verbose=1,
 				validation_data=valid_generator,
-				nb_val_samples=20,
+				nb_val_samples=100,
 				callbacks=callbacks
 			)
 
@@ -46,7 +46,7 @@ class Base_Model:
 		checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='auto')
 		earlyStopping = EarlyStopping(
 			monitor='val_loss',
-			patience=60
+			patience=20
 		)
 		callbacks = [checkpoint, earlyStopping]
 		data = np.asarray(data)
