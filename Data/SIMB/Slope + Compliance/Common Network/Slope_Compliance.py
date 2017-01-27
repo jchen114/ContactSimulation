@@ -15,23 +15,54 @@ import matplotlib.colors as colors
 from keras.utils.np_utils import to_categorical
 import os
 import math
+import re
 
 import DatabaseInterface as DBI
 
 import matplotlib.lines as lines
-import cPickle as pickle
+import sys
+maj = sys.version_info
+
+version = 2
+
+if maj[0] >= 3:
+	import _pickle as pickle
+	import importlib.machinery
+	import types
+	version = 3
+else:
+	import cPickle as pickle
+	import imp
 
 from random import shuffle
 import imp
 
-Base_Model = imp.load_source('Base_Model', '../BaseClass.py')
+cwd = os.getcwd()
+split_str = '\\\\+|\/'
+while True:
+	tokens = re.split(split_str , cwd)
+	if tokens[-1] == 'SIMB':
+		break
+	else:
+		l = tokens[:-1]
+		s = '/'
+		cwd = s.join(l)
+
+data_path = cwd
+
+if version == 3:
+	loader = importlib.machinery.SourceFileLoader('BaseClass', data_path + '/BaseClass.py')
+	BaseClass = types.ModuleType(loader.name)
+	loader.exec_module(BaseClass)
+else:
+	BaseClass = imp.load_source('BaseClass', data_path + '/BaseClass.py')
 
 
-class Slope_Ground_Predictor(Base_Model):
+class Slope_Ground_Predictor(BaseClass.Base_Model):
 
 	def __init__(self, lstm_layers, slope_dense_layers, ground_dense_layers, num_features, max_seq_length, save_substr):
 
-		Base_Model.__init__(self, num_features, max_seq_length, save_substr)
+		BaseClass.Base_Model.__init__(self, num_features, max_seq_length, save_substr)
 
 		if not self.loaded:
 			in_layer = Input(
@@ -41,7 +72,7 @@ class Slope_Ground_Predictor(Base_Model):
 
 			common_layer = Masking(mask_value=0., input_shape=(max_seq_length, num_features))(in_layer)
 
-			# LSTM Layers
+			# LSTM Layers Common layers
 			for layer in lstm_layers:
 				common_layer = LSTM(
 					output_dim=layer,
@@ -109,20 +140,17 @@ class Slope_Ground_Predictor(Base_Model):
 				loss='mse'
 			)
 
-			print "Compilation Time : ", time.time() - start
+			print("Compilation Time : ", time.time() - start)
 
-			print 'model layers: '
-			print self.model.summary()
+			print('model layers: ')
+			print(self.model.summary())
 
-			print 'model.inputs: '
-			print self.model.input_shape
+			print('model.inputs: ')
+			print(self.model.input_shape)
 
-			print 'model.outputs: '
-			print self.model.output_shape
+			print('model.outputs: ')
+			print(self.model.output_shape)
 
-	def train_on_generator(self, data_generator, valid_generator, samples_per_epoch=1500, nb_epoch=50, continue_training=True):
-
-		Base_Model.train_on_generator(self, data_generator, valid_generator, samples_per_epoch, nb_epoch, continue_training)
 
 	def predict_on_batch(self, generator, num_samples):
 		plt.ion()
@@ -174,7 +202,7 @@ class Slope_Ground_Predictor(Base_Model):
 		plt.waitforbuttonpress()
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
 	# data = pickle.load(open('SIMB_sequences_diff_train.p', 'rb'))
 	# labels = pickle.load(open('SIMB_targets_diff_traind.p', 'rb'))
@@ -182,14 +210,14 @@ if __name__ == '__main__':
 	#labels = DBI.split_labels(labels)
 	#pickle.dump(labels, open('SIMB_targets_diff.p', 'wb'))
 
-	Slope_Predictor = LSTM_Predictor(
-		lstm_layers=[128, 128],
-		num_outputs=1,
-		num_features=23,
-		max_seq_length=30,
-		output_name='slope_output',
-		save_substr='Keras-SIMB_Slope_no_forces_no_generator',
-	)
+	# Slope_Predictor = LSTM_Predictor(
+	# 	lstm_layers=[128, 128],
+	# 	num_outputs=1,
+	# 	num_features=23,
+	# 	max_seq_length=30,
+	# 	output_name='slope_output',
+	# 	save_substr='Keras-SIMB_Slope_no_forces_no_generator',
+	# )
 
 	# Predict on slope only.
 	# slopes = labels[0]
@@ -201,10 +229,10 @@ if __name__ == '__main__':
 	# 	continue_training=False
 	# )
 
-	test_data = pickle.load(open('SIMB_sequences_diff_test.p', 'rb'))
-	test_labels = pickle.load(open('SIMB_targets_diff_test.p', 'rb'))
-
-	Slope_Predictor.predict_on_data(test_data, test_labels)
+	# test_data = pickle.load(open('SIMB_sequences_diff_test.p', 'rb'))
+	# test_labels = pickle.load(open('SIMB_targets_diff_test.p', 'rb'))
+	#
+	# Slope_Predictor.predict_on_data(test_data, test_labels)
 
 	# errors = pickle.load(open('Errors.p', 'rb'))
 	# plt.hist(errors)

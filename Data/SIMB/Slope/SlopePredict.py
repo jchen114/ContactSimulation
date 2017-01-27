@@ -13,28 +13,47 @@ import matplotlib.colors as colors
 from keras.utils.np_utils import to_categorical
 import os
 import math
+import re
 
 import DatabaseInterface as DBI
 
-import matplotlib.lines as lines
-import cPickle as pickle
+import sys
+maj = sys.version_info
+
+version = 2
+
+if maj[0] >= 3:
+	import _pickle as pickle
+	import importlib.machinery
+	import types
+	version = 3
+else:
+	import cPickle as pickle
+	import imp
 
 from random import shuffle
 import imp
 
 cwd = os.getcwd()
-
+split_str = '\\\\+|\/'
 while True:
-	if cwd.split('/')[-1] == 'SIMB':
+	tokens = re.split(split_str , cwd)
+	if tokens[-1] == 'SIMB':
 		break
 	else:
-		l = cwd.split('/')[:-1]
+		l = tokens[:-1]
 		s = '/'
 		cwd = s.join(l)
 
 data_path = cwd
 
-BaseClass = imp.load_source('BaseClass', data_path + '/BaseClass.py')
+if version == 3:
+	loader = importlib.machinery.SourceFileLoader('BaseClass', data_path + '/BaseClass.py')
+	BaseClass = types.ModuleType(loader.name)
+	loader.exec_module(BaseClass)
+else:
+	BaseClass = imp.load_source('BaseClass', data_path + '/BaseClass.py')
+
 Base_Model = BaseClass.Base_Model
 
 class LSTM_Predictor(Base_Model):
@@ -89,16 +108,16 @@ class LSTM_Predictor(Base_Model):
 				loss='mse'
 			)
 
-			print "Compilation Time : ", time.time() - start
+			print("Compilation Time : ", time.time() - start)
 
-			print 'model layers: '
-			print self.model.summary()
+			print('model layers: ')
+			print(self.model.summary())
 
-			print 'model.inputs: '
-			print self.model.input_shape
+			print('model.inputs: ')
+			print(self.model.input_shape)
 
-			print 'model.outputs: '
-			print self.model.output_shape
+			print('model.outputs: ')
+			print(self.model.output_shape)
 
 	def train_on_generator(self, data_generator, valid_generator, samples_per_epoch=1500, nb_epoch=50, continue_training=True):
 		Base_Model.train_on_generator(self, data_generator, valid_generator, samples_per_epoch, nb_epoch, continue_training)

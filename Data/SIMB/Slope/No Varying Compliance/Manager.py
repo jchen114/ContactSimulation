@@ -1,10 +1,31 @@
-import imp
-import cPickle as pickle
+import sys
+maj = sys.version_info
+
+version = 2
+
+if maj[0] >= 3:
+	import _pickle as pickle
+	import importlib.machinery
+	import types
+	version = 3
+else:
+	import cPickle as pickle
+	import imp
 # Inside SIMB/Slope/No Varying Compliance
 
 if __name__ == '__main__':
 
-	module = imp.load_source('SlopePredict', '../SlopePredict.py')
+	if version == 3:
+		loader = importlib.machinery.SourceFileLoader('SlopePredict', '../SlopePredict.py')
+		module = types.ModuleType(loader.name)
+		loader.exec_module(module)
+
+		loader = importlib.machinery.SourceFileLoader('DatabaseInterface', '../../../DatabaseInterface.py')
+		DBI = types.ModuleType(loader.name)
+		loader.exec_module(DBI)
+	else:
+		module = imp.load_source('SlopePredict', '../SlopePredict.py')
+		DBI = imp.load_source('DatabaseInterface', '../../../DatabaseInterface.py')
 
 	predictor = module.LSTM_Predictor(
 		lstm_layers=[128, 128],
@@ -14,8 +35,6 @@ if __name__ == '__main__':
 		output_name='slope_output',
 		save_substr='model'
 	)
-
-	DBI = imp.load_source('DatabaseInterface', '../../../DatabaseInterface.py')
 
 	try:
 		data = pickle.load(open('SIMB_sequences_diff.p', 'rb'))
