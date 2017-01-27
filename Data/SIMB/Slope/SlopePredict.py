@@ -119,9 +119,6 @@ class LSTM_Predictor(Base_Model):
 			print('model.outputs: ')
 			print(self.model.output_shape)
 
-	def train_on_generator(self, data_generator, valid_generator, samples_per_epoch=1500, nb_epoch=50, continue_training=True):
-		Base_Model.train_on_generator(self, data_generator, valid_generator, samples_per_epoch, nb_epoch, continue_training)
-
 	def predict_on_batch(self, gen, num_samples, title, output_name):
 		plt.ion()
 		plt.figure(1)
@@ -189,7 +186,7 @@ class LSTM_Predictor(Base_Model):
 			plt.scatter(i, yhat, c='b', alpha=0.6)
 			# Draw a line
 			plt.plot([i, i], [yhat, ytrue], color='k')
-			plt.pause(0.01)
+			plt.pause(0.001)
 		plt.waitforbuttonpress()
 
 if __name__ == '__main__':

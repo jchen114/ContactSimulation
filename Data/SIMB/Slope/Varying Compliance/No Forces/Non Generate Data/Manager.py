@@ -11,19 +11,19 @@ if __name__ == '__main__':
 		num_features=23,
 		max_seq_length=30,
 		output_name='slope_output',
-		save_substr='model-same_data'
+		save_substr='model-normalized'
 	)
 
 	DBI = imp.load_source('DatabaseInterface', '../../../../../DatabaseInterface.py')
 
 	try:
-		data = pickle.load(open('SIMB_sequences_diff.p', 'rb'))
-		labels = pickle.load(open('SIMB_targets_diff.p', 'rb'))
+		data = pickle.load(open('SIMB_sequences_normalized.p', 'rb'))
+		labels = pickle.load(open('SIMB_targets_normalized.p', 'rb'))
 	except Exception:
 		data, labels = DBI.prepare_data(
 			db_str='../../../../../samples_w_compliance.db',
 			num_seq=None,
-			difference=True,
+			mode='normalize',
 			include_forces=False,
 			dump=True
 		)
@@ -32,30 +32,33 @@ if __name__ == '__main__':
 
 	slopes = targets[0]
 
-	train_data = data[:int(0.8*len(data))]
-	train_labels = slopes[:int(0.8*len(slopes))]
+	#train_data = data[:int(0.8*len(data))]
+	#train_labels = slopes[:int(0.8*len(slopes))]
 
 	predictor.train_on_data(
-		data=train_data,
-		labels=train_labels,
+		data=data,
+		labels=slopes,
 		batch_size=32,
 		epochs=50,
 		continue_training=True
 	)
 
-	test_data = data[int(0.8*len(data)) + 1 :]
-	test_labels = slopes[int(0.8*len(slopes)) + 1 :]
+	#test_data = data[int(0.8*len(data)) + 1 :]
+	#test_labels = slopes[int(0.8*len(slopes)) + 1 :]
 
-	# test_data, test_labels = DBI.prepare_data(
-	# 	db_str='../../../../../samples_w_compliance_test.db',
-	# 	num_seq=None,
-	# 	difference=True,
-	# 	include_forces=False,
-	# 	dump=False
-	# )
-	#
-	# targets = DBI.split_labels(test_labels)
-	#
-	# slopes = targets[0]
+	test_data, test_labels = DBI.prepare_data(
+		db_str='../../../../../samples_w_compliance_test.db',
+		num_seq=None,
+		mode='normalize',
+		include_forces=False,
+		dump=False
+	)
 
-	predictor.predict_on_data(test_data, test_labels)
+	#test_data = test_data[int(0.8*len(test_data)) + 1:]
+	#test_labels = test_labels[int(0.8*len(test_labels)) + 1:]
+
+	targets = DBI.split_labels(test_labels)
+
+	test_labels = targets[0]
+
+	predictor.predict_on_data(test_data[:800], test_labels[:800])
