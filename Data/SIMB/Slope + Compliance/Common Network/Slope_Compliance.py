@@ -122,7 +122,7 @@ class Slope_Ground_Predictor(BaseClass.Base_Model):
 
 			ground_output = TimeDistributed(
 				Dense (
-					output_dim=2,
+					output_dim=1,
 					activation='linear'
 				),
 				name='ground_output'
