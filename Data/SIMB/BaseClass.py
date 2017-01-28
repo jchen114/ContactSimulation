@@ -6,7 +6,7 @@ import numpy as np
 
 class Base_Model:
 
-	def __init__(self, num_features, max_seq_length, save_substr, dir):
+	def __init__(self, num_features, max_seq_length, save_substr, dir='.'):
 
 		self.substr = save_substr
 		self.num_features = num_features
