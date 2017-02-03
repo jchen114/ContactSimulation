@@ -1,0 +1,10 @@
+samples_w_compliance.db filter=lfs diff=lfs merge=lfs -text
+samples_w_compliance_validation.db filter=lfs diff=lfs merge=lfs -text
+Data/samples.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_33.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_33_val.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_bkup_3.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_test.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_w_compliance.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_w_compliance_test.db filter=lfs diff=lfs merge=lfs -text
+Data/samples_w_compliance_validation.db filter=lfs diff=lfs merge=lfs -text
