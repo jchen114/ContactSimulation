@@ -13,10 +13,13 @@
 
 #include "TerrainCreator.h"
 
-std::string db_path = "..\\..\\Data\\samples.db";
+//std::string db_path = "..\\..\\Data\\samples.db";
 //std::string db_path = "..\\..\\Data\\samples_test.db";
 //std::string db_path = "..\\..\\Data\\samples_w_compliance.db";
 //std::string db_path = "..\\..\\Data\\samples_w_compliance_test.db";
+//std::string db_path = "..\\..\\Data\\samples_33.db";
+std::string db_path = "..\\..\\Data\\samples_33_val.db";
+
 
 #include "sqlite3.h"
 
@@ -234,9 +237,9 @@ void ContactLearningApp::ManageGroundCollisions() {
 			else {
 				m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
 				//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
-				int rand_stiffness = 2500;
+				//int rand_stiffness = 2500;
 				// Generate number between 1000 and 3000
-				//int rand_stiffness = rand() % 2000 + 1000;
+				int rand_stiffness = rand() % 2000 + 1000;
 				float rand_damping = (float)rand_stiffness / 10.0f;
 				printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
 				ContactManager::GetInstance().AddGroundToCollideWith(
@@ -296,8 +299,8 @@ void ContactLearningApp::Reset() {
 	for (m_ground_idx = 0; m_ground_idx < 3; m_ground_idx++) {
 		m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
 		//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
-		int rand_stiffness = 2500;
-		//int rand_stiffness = rand() % 2000 + 1000;
+		//int rand_stiffness = 2500;
+		int rand_stiffness = rand() % 2000 + 1000;
 		float rand_damping = (float)rand_stiffness / 10.0f;
 		printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
 		ContactManager::GetInstance().AddGroundToCollideWith(
@@ -454,7 +457,7 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 		ManageGroundCollisions();
 
 		// Check the sample clock for sampling
-		if (m_sampleClock.getTimeMilliseconds() > 500) {
+		if (m_sampleClock.getTimeMilliseconds() > 33) {
 			if (ContactManager::GetInstance().m_beingUsed) {
 				SQL_DataWrapper dat = PushDataIntoQueue();
 
