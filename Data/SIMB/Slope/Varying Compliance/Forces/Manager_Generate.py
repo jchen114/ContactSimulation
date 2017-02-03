@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
 	test_data = np.concatenate((test_data, forces), 2)
 
-	test_labels, _ = DBI.split_labels(test_labels)
+	slope_labels, ground_labels = DBI.split_labels(test_labels)
 
 	predictor.predict_on_data(
 		data=test_data[:800],

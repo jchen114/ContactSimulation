@@ -151,7 +151,6 @@ class Slope_Ground_Predictor(BaseClass.Base_Model):
 			print('model.outputs: ')
 			print(self.model.output_shape)
 
-
 	def predict_on_batch(self, generator, num_samples):
 		plt.ion()
 		plt.figure(1)
@@ -200,6 +199,46 @@ class Slope_Ground_Predictor(BaseClass.Base_Model):
 				plt.scatter(x=idx, y=dampings_a[-1], c='r')
 				plt.pause(0.01)
 		plt.waitforbuttonpress()
+
+	def predict_on_data(self, data, slope_labels, ground_labels):
+
+		plt.ion()
+		plt.figure(1)
+		plt.subplot(211)
+		plt.title('Slope')
+		plt.subplot(212)
+		plt.title('Compliance')
+
+		predictions = self.model.predict_on_batch(
+			x=data
+		)
+
+		slope_preds = predictions[0]
+		ground_preds = predictions[1]
+
+		for prediction in range(0, len(slope_preds)):
+
+			slopes = slope_preds[prediction]
+			slopes_actual = slope_labels[prediction]
+
+			compliances = ground_preds[prediction]
+			compliances_actual = ground_labels[prediction]
+
+			plt.subplot(211)
+			plt.scatter(prediction, slopes[-1], c='b', alpha=0.6)
+			plt.scatter(prediction, slopes_actual[-1], c='r')
+
+			plt.plot([prediction, prediction], [slopes[-1], slopes_actual[-1]], color='k')
+
+			plt.subplot(212)
+			plt.scatter(prediction, compliances[-1], c='b', alpha=0.6)
+			plt.scatter(prediction, compliances_actual[-1], c='r')
+
+			plt.plot([prediction, prediction], [compliances[-1], compliances_actual[-1]], color='k')
+
+			plt.pause(0.01)
+		plt.waitforbuttonpress()
+
 
 
 #if __name__ == '__main__':

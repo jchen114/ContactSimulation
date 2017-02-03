@@ -1,6 +1,8 @@
 import sys
 maj = sys.version_info
 
+import numpy as np
+
 version = 2
 
 if maj[0] >= 3:
@@ -58,5 +60,33 @@ if __name__ == '__main__':
 		valid_generator=valid_gen,
 		samples_per_epoch=1500,
 		nb_epoch=50,
-		continue_training=True
+		continue_training=False
 	)
+
+	# ==================== TESTING =================== #
+	test_data, test_labels, foot_forces = DBI.prepare_data(
+		db_str='../../../samples_w_compliance_test.db',
+		num_seq=None,
+		mode='normalize',
+		include_forces=True,
+		dump=False
+	)
+
+	lf_forces = foot_forces[0]
+	rf_forces = foot_forces[1]
+
+	lf_forces = DBI.avg_down_foot_forces(lf_forces)
+	rf_forces = DBI.avg_down_foot_forces(rf_forces)
+
+	forces = np.concatenate((lf_forces, rf_forces), 2)
+
+	test_data = np.concatenate((test_data, forces), 2)
+
+	slope_labels, ground_labels = DBI.split_labels(test_labels)
+
+	network.predict_on_data(
+		data=test_data[:800],
+		slope_labels=slope_labels[:800],
+		ground_labels=ground_labels[:800]
+	)
+

@@ -327,7 +327,7 @@ def prepare_data(db_str, num_seq=None, mode='difference', include_forces=False, 
 	return xs, ys, foot_forces
 
 
-def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sample_size=32, include_compliance=True, include_compliance_targets=True):
+def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sample_size=32, include_compliance=True, include_mode=0):
 	num_sequences = get_number_of_sequences(db_connection)['MAX(SEQUENCE_ID)']
 	# Get the size for each sequence?
 	sizes = list()
@@ -377,23 +377,32 @@ def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sa
 				sample.extend(inputs)
 				slope_targets.append(slope_target)
 				ground_targets.append(ground_target)
-		if include_compliance_targets:
+		if include_mode == 0:
 			yield (
 				{
 					'input_1': np.asarray(sample)
 				},
 				{
 					'slope_output': np.asarray(slope_targets),
-					'ground_output': np.asarray(ground_targets)
+					'compliance_output': np.asarray(ground_targets)
 				}
 			)
-		else:
+		elif include_mode == 1:
 			yield (
 				{
 					'input_1': np.asarray(sample)
 				},
 				{
-					'slope_output': np.asarray(slope_targets)
+					'compliance_output': np.asarray(slope_targets)
+				}
+			)
+		elif include_mode == 2:
+			yield (
+				{
+					'input_1': np.asarray(sample)
+				},
+				{
+					'compliance_output': np.asarray(ground_targets)
 				}
 			)
 
