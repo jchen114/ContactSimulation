@@ -393,7 +393,7 @@ def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sa
 					'input_1': np.asarray(sample)
 				},
 				{
-					'compliance_output': np.asarray(slope_targets)
+					'slope_output': np.asarray(slope_targets)
 				}
 			)
 		elif include_mode == 2:
