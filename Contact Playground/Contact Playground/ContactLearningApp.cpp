@@ -13,20 +13,14 @@
 
 #include "TerrainCreator.h"
 
-<<<<<<< HEAD
 //std::string db_path = "..\\..\\Data\\samples.db";
 //std::string db_path = "..\\..\\Data\\samples_test.db";
 //std::string db_path = "..\\..\\Data\\samples_w_compliance.db";
 //std::string db_path = "..\\..\\Data\\samples_w_compliance_test.db";
 //std::string db_path = "..\\..\\Data\\samples_33.db";
-std::string db_path = "..\\..\\Data\\samples_33_val.db";
+//std::string db_path = "..\\..\\Data\\samples_33_val.db";
+std::string db_path = "..\\..\\Data\\samples_33_test.db";
 
-=======
-std::string db_path = "..\\..\\Data\\samples.db";
-//std::string db_path = "..\\..\\Data\\samples_test.db";
-//std::string db_path = "..\\..\\Data\\samples_w_compliance.db";
-//std::string db_path = "..\\..\\Data\\samples_w_compliance_test.db";
->>>>>>> ee7961ef6d249c8d118645754b00878352025da7
 
 #include "sqlite3.h"
 
@@ -244,15 +238,10 @@ void ContactLearningApp::ManageGroundCollisions() {
 			else {
 				m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
 				//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
-<<<<<<< HEAD
 				//int rand_stiffness = 2500;
 				// Generate number between 1000 and 3000
 				int rand_stiffness = rand() % 2000 + 1000;
-=======
-				int rand_stiffness = 2500;
-				// Generate number between 1000 and 3000
-				//int rand_stiffness = rand() % 2000 + 1000;
->>>>>>> ee7961ef6d249c8d118645754b00878352025da7
+
 				float rand_damping = (float)rand_stiffness / 10.0f;
 				printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
 				ContactManager::GetInstance().AddGroundToCollideWith(
@@ -312,13 +301,8 @@ void ContactLearningApp::Reset() {
 	for (m_ground_idx = 0; m_ground_idx < 3; m_ground_idx++) {
 		m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
 		//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
-<<<<<<< HEAD
 		//int rand_stiffness = 2500;
 		int rand_stiffness = rand() % 2000 + 1000;
-=======
-		int rand_stiffness = 2500;
-		//int rand_stiffness = rand() % 2000 + 1000;
->>>>>>> ee7961ef6d249c8d118645754b00878352025da7
 		float rand_damping = (float)rand_stiffness / 10.0f;
 		printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
 		ContactManager::GetInstance().AddGroundToCollideWith(
@@ -475,11 +459,7 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 		ManageGroundCollisions();
 
 		// Check the sample clock for sampling
-<<<<<<< HEAD
 		if (m_sampleClock.getTimeMilliseconds() > 33) {
-=======
-		if (m_sampleClock.getTimeMilliseconds() > 500) {
->>>>>>> ee7961ef6d249c8d118645754b00878352025da7
 			if (ContactManager::GetInstance().m_beingUsed) {
 				SQL_DataWrapper dat = PushDataIntoQueue();
 
@@ -609,17 +589,10 @@ void ContactLearningApp::SaveSamplesToDB(SQL_DataWrapper data) {
 	}
 
 	int bind_idx = 1;
-<<<<<<< HEAD
 
 	sqlite3_bind_double(pStmt, bind_idx ++, data.m_TORSO_LV.x());
 	sqlite3_bind_double(pStmt, bind_idx++, data.m_TORSO_LV.y());
 
-=======
-
-	sqlite3_bind_double(pStmt, bind_idx ++, data.m_TORSO_LV.x());
-	sqlite3_bind_double(pStmt, bind_idx++, data.m_TORSO_LV.y());
-
->>>>>>> ee7961ef6d249c8d118645754b00878352025da7
 	// BIND Distances Orientations and Angular Velocities
 	for (auto tuple : DsOsAVs) {
 		float distance = std::get<0>(tuple);
@@ -704,57 +677,8 @@ void ContactLearningApp::DBWorkerThread() {
 		//m_Ready = false;
 		//ul.unlock();
 		//m_ProcessedCV.notify_one();
-<<<<<<< HEAD
 	}
 
-}
-
-SQL_DataWrapper ContactLearningApp::PushDataIntoQueue() {
-
-	btVector3 torsoLV = m_ragDoll->GetTorsoLinearVelocity();
-
-	std::vector<std::tuple<float, float, float>> DsOsAVs = m_ragDoll->GetDsOsAVs();
-	auto forces = m_ragDoll->GetContactForces();
-
-	// Determine which ground Rag Doll is over.
-	float stiffness = 0.0f;
-	float damping = 0.0f;
-	float slope = 0.0f;
-
-	for (auto ground : m_collisionGrounds) {
-		btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
-		btVector3 relPos = tr(m_ragDoll->GetLocation());
-
-		if (relPos.x() >= -GROUND_WIDTH && relPos.x() < GROUND_WIDTH) {
-			//printf("Found Ground. \n");
-			CollideeObject obj = ContactManager::GetInstance().m_toCollideWith.find(ground)->second;
-			std::tuple<float, float> gps = obj.GetGroundProperties();
-			stiffness = std::get<0>(gps);
-			damping = std::get<1>(gps);
-			slope = obj.m_object->GetOrientation();
-			//printf("stiffness = %f, damping = %f, slope = %f \n", stiffness, damping, slope);
-			break;
-		}
-=======
->>>>>>> ee7961ef6d249c8d118645754b00878352025da7
-	}
-
-	//printf("stiffness = %f, damping = %f, slope = %f \n", stiffness, damping, slope);
-
-
-	SQL_DataWrapper dat(
-		torsoLV,
-		DsOsAVs,
-		std::get<0>(forces),
-		std::get<1>(forces),
-		stiffness,
-		damping,
-		slope,
-		m_sequenceNumber,
-		m_order++
-		);
-
-	return dat;
 }
 
 SQL_DataWrapper ContactLearningApp::PushDataIntoQueue() {
