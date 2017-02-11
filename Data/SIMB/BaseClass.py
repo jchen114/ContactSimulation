@@ -1,6 +1,6 @@
 import os
 from keras.models import load_model
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, History
 import numpy as np
 
 
@@ -29,7 +29,10 @@ class Base_Model:
 				monitor='val_loss',
 				patience=20
 			)
-			callbacks = [checkpoint, earlyStopping]
+
+			history = History()
+
+			callbacks = [checkpoint, earlyStopping, history]
 
 			self.model.fit_generator(
 				generator=data_generator,
@@ -40,6 +43,10 @@ class Base_Model:
 				nb_val_samples=100,
 				callbacks=callbacks
 			)
+
+			self._history(history)
+
+
 
 	def train_on_data(self, data, labels, batch_size, epochs):
 		filepath = self.substr + "-{epoch:02d}-{val_loss:.5f}.hdf5"
@@ -60,3 +67,7 @@ class Base_Model:
 			validation_split=0.05,
 			callbacks=callbacks
 		)
+
+	def _history(self, history):
+		# TODO: to be implemented by subclasses
+		pass

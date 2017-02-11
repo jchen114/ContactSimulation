@@ -74,7 +74,7 @@ if __name__ == '__main__':
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='compliance_output',
-		save_substr='compliance_model'
+		save_substr='compliance/compliance_model'
 	)
 	#
 	# ================== TRAINING =================== #
@@ -86,10 +86,10 @@ if __name__ == '__main__':
 		nb_epoch=40,
 		valid_data=(
 			{
-				'input_1': valid_data
+				'input_1': np.asarray(valid_data)
 			},
 			{
-				'compliance_output': compliance_labels
+				'compliance_output': np.asarray(compliance_labels)
 			}
 		),
 	)

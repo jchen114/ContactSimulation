@@ -131,3 +131,6 @@ class Network(BaseClass.Base_Model):
 			plt.plot([prediction, prediction], [p_vec[-1], a_vec[-1]], color='k')
 			plt.pause(0.01)
 		plt.waitforbuttonpress()
+
+	def _history(self, history):
+		pickle.dump(history, open('history.p', 'wb'))
