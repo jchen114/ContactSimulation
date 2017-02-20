@@ -79,7 +79,7 @@ if __name__ == '__main__':
 	# ================== TRAINING =================== #
 
 	slope_network.train_on_generator_validation_set(
-		continue_training=True,
+		continue_training=False,
 		data_gen=slope_data_gen,
 		samples_per_epoch=18100,
 		nb_epoch=40,
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	# # ==================== TESTING =================== #
 	#
 	test_data, test_labels, foot_forces = DBI.prepare_data(
-		db_str='../../../samples_w_compliance_test.db',
+		db_str='../../../samples_33_val.db',
 		num_seq=None,
 		mode='normalize',
 		include_forces=True,
@@ -117,13 +117,8 @@ if __name__ == '__main__':
 	slope_labels, compliance_labels = DBI.split_labels(test_labels)
 
 	slope_network.predict_on_data(
-		data=test_data[:800],
-		labels = slope_labels[:800],
+		data=test_data[:2000],
+		labels = slope_labels[:2000],
 		title='Slopes'
 	)
 
-	compliance_network.predict_on_data(
-		data=test_data[:800],
-		labels=compliance_labels[:800],
-		title='Compliance'
-	)

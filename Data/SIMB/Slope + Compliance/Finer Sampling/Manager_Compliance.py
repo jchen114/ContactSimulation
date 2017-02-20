@@ -74,13 +74,13 @@ if __name__ == '__main__':
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='compliance_output',
-		save_substr='compliance/compliance_model'
+		save_substr='compliance_model'
 	)
 	#
 	# ================== TRAINING =================== #
 
 	compliance_network.train_on_generator_validation_set(
-		continue_training=True,
+		continue_training=False,
 		data_gen=compliance_data_gen,
 		samples_per_epoch=18100,
 		nb_epoch=40,
@@ -96,34 +96,28 @@ if __name__ == '__main__':
 
 	# # ==================== TESTING =================== #
 	#
-	# test_data, test_labels, foot_forces = DBI.prepare_data(
-	# 	db_str='../../../samples_w_compliance_test.db',
-	# 	num_seq=None,
-	# 	mode='normalize',
-	# 	include_forces=True,
-	# 	dump=False
-	# )
-	#
-	# lf_forces = foot_forces[0]
-	# rf_forces = foot_forces[1]
-	#
-	# lf_forces = DBI.avg_down_foot_forces(lf_forces)
-	# rf_forces = DBI.avg_down_foot_forces(rf_forces)
-	#
-	# forces = np.concatenate((lf_forces, rf_forces), 2)
-	#
-	# test_data = np.concatenate((test_data, forces), 2)
-	#
-	# slope_labels, compliance_labels = DBI.split_labels(test_labels)
-	#
-	# slope_network.predict_on_data(
-	# 	data=test_data[:800],
-	# 	labels = slope_labels[:800],
-	# 	title='Slopes'
-	# )
-	#
-	# compliance_network.predict_on_data(
-	# 	data=test_data[:800],
-	# 	labels=compliance_labels[:800],
-	# 	title='Compliance'
-	# )
+	test_data, test_labels, foot_forces = DBI.prepare_data(
+		db_str='../../../samples_33_test.db',
+		num_seq=None,
+		mode='normalize',
+		include_forces=True,
+		dump=False
+	)
+
+	lf_forces = foot_forces[0]
+	rf_forces = foot_forces[1]
+
+	lf_forces = DBI.avg_down_foot_forces(lf_forces)
+	rf_forces = DBI.avg_down_foot_forces(rf_forces)
+
+	forces = np.concatenate((lf_forces, rf_forces), 2)
+
+	test_data = np.concatenate((test_data, forces), 2)
+
+	slope_labels, compliance_labels = DBI.split_labels(test_labels)
+
+	compliance_network.predict_on_data(
+		data=test_data[:4000],
+		labels=compliance_labels[:4000],
+		title='Compliance'
+	)
