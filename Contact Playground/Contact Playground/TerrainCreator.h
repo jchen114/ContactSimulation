@@ -12,8 +12,8 @@ public:
 		float std_dev = 0.01f,
 		float height = 0.5f,
 		float depth = 3,
-		float slope_min = -0.13f,
-		float slope_max = 0.13f
+		float slope_min = -0.122f,
+		float slope_max = 0.122f
 		);
 	~TerrainCreator();
 

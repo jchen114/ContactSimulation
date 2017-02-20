@@ -139,9 +139,16 @@ void ContactLearningApp::LoadTextures() {
 
 void ContactLearningApp::CreateGround(const btVector3 &pos) {
 	// Create 3D ground.
+
 	GameObject *ground = CreateGameObject(new btBoxShape(btVector3(GROUND_WIDTH, GROUND_HEIGHT, GROUND_DEPTH)), 0, btVector3(1.0f, 1.0f, 1.0f), btVector3(0,0,0), "Ground init");
 	ground->GetShape()->setUserPointer((uintptr_t) GROUND);
-	ContactManager::GetInstance().AddObjectToCollideWith(ground);
+	
+	//int rand_stiffness = rand() % 2000 + 1000;
+	//float rand_damping = (float)rand_stiffness / 10.0f;
+	//
+	//printf("Ground stiffness: %d, damping: %f\n", rand_stiffness, rand_damping);
+
+	//ContactManager::GetInstance().AddGroundToCollideWith(ground, rand_stiffness, rand_damping);
 
 	btTransform tr;
 	ground->GetRigidBody()->getMotionState()->getWorldTransform(tr);
@@ -153,52 +160,6 @@ void ContactLearningApp::CreateGround(const btVector3 &pos) {
 
 	m_grounds.push_back(ground);
 	CreateMoarTerrain();
-
-}
-
-void ContactLearningApp::CreateBodies() {
-	// Add the rag doll
-	m_ragDoll = std::unique_ptr<RagDoll>(new RagDoll(this, true));
-	//m_ragDoll = std::unique_ptr<RagDoll>(new RagDoll(this, false));
-	m_ragDoll->InitializeRagDoll(GROUND_HEIGHT, m_main_window_id);
-
-	m_ragDoll->m_ResetCallback = std::bind(&ContactLearningApp::Reset, this);
-	m_ragDoll->m_StartCallback = std::bind(&ContactLearningApp::Start, this);
-	m_ragDoll->m_SimulationEnd = std::bind(&ContactLearningApp::SimulationEnd, this);
-
-	m_running = false;
-
-}
-
-void ContactLearningApp::ManageTerrainCreation(){
-
-	// Only delete grounds up to the bipeds current standing ground.
-	
-	if (m_generationClock.getTimeMilliseconds() > 500) {
-
-		btVector3 ragDollLocation = m_cameraManager->GetCameraLocation();
-		//printf("target.x= %f \n", target.x());
-		if (ragDollLocation.x() > m_groundEndPt.x() - 1.3f) {
-			CreateMoarTerrain();
-		}
-
-		while (m_grounds.size() > 6) {
-			GameObject *currentGround = GetCurrentStandingGround();
-			GameObject *ground = m_grounds.front();
-			if (ground == currentGround) {
-				break;
-			}
-			else {
-				m_grounds.pop_front();
-				m_ground_idx -= 1;
-				// Remove from world
-				m_pWorld->removeRigidBody(ground->GetRigidBody());
-				// Remove from world objects
-				m_objects.erase(std::remove(m_objects.begin(), m_objects.end(), ground), m_objects.end());
-			}
-		}
-		m_generationClock.reset();
-	}
 
 }
 
@@ -226,6 +187,52 @@ void ContactLearningApp::CreateMoarTerrain() {
 	printf("new ground end pt = %f \n", m_groundEndPt.x());
 }
 
+void ContactLearningApp::CreateBodies() {
+	// Add the rag doll
+	m_ragDoll = std::unique_ptr<RagDoll>(new RagDoll(this, true));
+	//m_ragDoll = std::unique_ptr<RagDoll>(new RagDoll(this, false));
+	m_ragDoll->InitializeRagDoll(GROUND_HEIGHT, m_main_window_id);
+
+	m_ragDoll->m_ResetCallback = std::bind(&ContactLearningApp::Reset, this);
+	m_ragDoll->m_StartCallback = std::bind(&ContactLearningApp::Start, this);
+	m_ragDoll->m_SimulationEnd = std::bind(&ContactLearningApp::SimulationEnd, this);
+
+	m_running = false;
+
+}
+
+void ContactLearningApp::ManageTerrainCreation(){
+
+	// Only delete grounds up to the bipeds current standing ground.
+	
+	if (m_generationClock.getTimeMilliseconds() > 500) {
+
+		btVector3 ragDollLocation = m_ragDoll->GetLocation();
+		//printf("target.x= %f \n", target.x());
+		if (ragDollLocation.x() > m_groundEndPt.x() - 1.3f) {
+			CreateMoarTerrain();
+		}
+
+		while (m_grounds.size() > 6) {
+			GameObject *currentGround = GetCurrentStandingGround();
+			GameObject *ground = m_grounds.front();
+			if (ground == currentGround) {
+				break;
+			}
+			else {
+				m_grounds.pop_front();
+				m_ground_idx -= 1;
+				// Remove from world
+				m_pWorld->removeRigidBody(ground->GetRigidBody());
+				// Remove from world objects
+				m_objects.erase(std::remove(m_objects.begin(), m_objects.end(), ground), m_objects.end());
+			}
+		}
+		m_generationClock.reset();
+	}
+
+}
+
 void ContactLearningApp::ManageGroundCollisions() {
 	
 	if (m_ragDoll->GetLocation().x() > m_collisionEndPt.x() - 0.6f) {
@@ -237,8 +244,7 @@ void ContactLearningApp::ManageGroundCollisions() {
 			}
 			else {
 				m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
-				//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
-				//int rand_stiffness = 2500;
+
 				// Generate number between 1000 and 3000
 				int rand_stiffness = rand() % 2000 + 1000;
 
@@ -295,13 +301,9 @@ void ContactLearningApp::Reset() {
 
 	CreateGround();
 
-	m_order = 0;
-	m_sequenceNumber += 1;
+	for (m_ground_idx = 0; m_ground_idx < 4; m_ground_idx++) {
 
-	for (m_ground_idx = 0; m_ground_idx < 3; m_ground_idx++) {
 		m_collisionGrounds.push_back(m_grounds.at(m_ground_idx));
-		//ContactManager::GetInstance().AddObjectToCollideWith(m_grounds.at(m_ground_idx), 3.0f);
-		//int rand_stiffness = 2500;
 		int rand_stiffness = rand() % 2000 + 1000;
 		float rand_damping = (float)rand_stiffness / 10.0f;
 		printf("stiff = %d, damp = %f \n", rand_stiffness, rand_damping);
@@ -324,6 +326,9 @@ void ContactLearningApp::Reset() {
 }
 
 void ContactLearningApp::Start() {
+
+	m_order = 0;
+	m_sequenceNumber += 1;
 
 	m_sampleClock.reset();
 	m_collisionClock.reset();
@@ -435,7 +440,7 @@ void ContactLearningApp::PostTickCallback(btScalar timestep) {
 
 	if (m_running) {
 
-		if (m_collisionClock.getTimeMilliseconds() > 200) {
+		if (m_collisionClock.getTimeMilliseconds() > 300) {
 			for (auto ground : m_collisionGrounds) {
 				btTransform tr = ground->GetRigidBody()->getWorldTransform().inverse();
 				btVector3 relPos = tr(m_ragDoll->GetLocation());
@@ -603,9 +608,8 @@ void ContactLearningApp::SaveSamplesToDB(SQL_DataWrapper data) {
 		sqlite3_bind_double(pStmt, bind_idx++, AV);
 	}
 
-	auto forces = m_ragDoll->GetContactForces();
-	auto rightFootForces = std::get<0>(forces);
-	auto leftFootForces = std::get<1>(forces);
+	auto rightFootForces = data.m_RF_FORCES;
+	auto leftFootForces = data.m_LF_FORCES;
 
 	std::string rf_forces_str;
 	std::string lf_forces_str;
@@ -759,7 +763,6 @@ static int NumSequencesCallback(void *data, int argc, char **argv, char **azColN
 		if (!col.compare("NumSequences")) {
 			printf("NumSequences = %d\n", std::stoi(val));
 			m_app->m_sequenceNumber = std::stoi(val);
-			m_app->m_sequenceNumber++;
 		}
 	}
 	return 0;

@@ -24,8 +24,8 @@ public:
 
 	btVector3 m_TORSO_LV;
 	std::vector<std::tuple<float, float, float>> m_DsOsAVS;
-	btVector3 m_RF_FORCES;
-	btVector3 m_LF_FORCES;
+	std::vector<btVector3> m_RF_FORCES;
+	std::vector<btVector3> m_LF_FORCES;
 	float m_GROUND_STIFFNESS;
 	float m_GROUND_DAMPING;
 	float m_GROUND_SLOPE;
