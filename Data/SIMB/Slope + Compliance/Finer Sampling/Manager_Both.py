@@ -14,9 +14,9 @@ else:
 	import cPickle as pickle
 	import imp
 
-# Inside SIMB/Slope + Compliance/Separate Network
+# Inside SIMB/Slope + Compliance/Finer Sampling
 
-import LSTM_Model
+import Slope_Compliance
 
 if __name__ == '__main__':
 
@@ -31,11 +31,12 @@ if __name__ == '__main__':
 
 	data_connection = DBI.initialize_db_connection('../../../samples_33.db')
 	data_connection.row_factory = DBI.dict_factory
-	slope_data_gen = DBI.data_generator(
+
+	compliance_data_gen = DBI.data_generator(
 		seq_length=30,
 		db_connection=data_connection,
 		mode='normalize',
-		include_mode=1
+		include_mode=0
 	)
 
 	# Validation
@@ -65,40 +66,39 @@ if __name__ == '__main__':
 	slope_labels, compliance_labels = DBI.split_labels(valid_labels)
 
 	# # ========================== BUILD NETWORKS ========================= #
-	#
-	slope_network = LSTM_Model.Network(
-		lstm_layers=[128,128],
-		dense_layers=[16],
+
+	slope_compliance_network = Slope_Compliance.Network(
+		lstm_layers=[128, 128],
+		slope_dense_layers=[128],
+		ground_dense_layers=[128],
 		num_features=45,
-		num_outputs=1,
 		max_seq_length=30,
-		output_name='slope_output',
 		save_substr='model',
-		dir='slope'
+		dir='slope_compliance/trial 3'
 	)
 	#
 	# ================== TRAINING =================== #
 
-	slope_network.train_on_generator_validation_set(
+	slope_compliance_network.train_on_generator_validation_set(
 		continue_training=True,
-		data_gen=slope_data_gen,
-		samples_per_epoch=18100,
-		nb_epoch=40,
+		data_gen=compliance_data_gen,
+		samples_per_epoch=18000,
+		nb_epoch=23,
 		valid_data=(
 			{
 				'input_1': np.asarray(valid_data)
 			},
 			{
-				'slope_output': np.asarray(slope_labels)
+				'slope_output': np.asarray(slope_labels),
+				'compliance_output': np.asarray(compliance_labels)
 			}
 		),
 	)
 
-	#
 	# # ==================== TESTING =================== #
 	#
 	test_data, test_labels, foot_forces = DBI.prepare_data(
-		db_str='../../../samples_33_val.db',
+		db_str='../../../samples_33_test.db',
 		num_seq=None,
 		mode='normalize',
 		include_forces=True,
@@ -117,9 +117,8 @@ if __name__ == '__main__':
 
 	slope_labels, compliance_labels = DBI.split_labels(test_labels)
 
-	slope_network.predict_on_data(
+	slope_compliance_network.predict_on_data(
 		data=test_data[3000:5000],
-		labels = slope_labels[3000:5000],
-		title='Slopes'
+		slope_labels=slope_labels[3000:5000],
+		compliance_labels=compliance_labels[3000:5000]
 	)
-

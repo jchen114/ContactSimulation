@@ -133,22 +133,3 @@ class Network(BaseClass.Base_Model):
 			plt.plot([prediction, prediction], [p_vec[-1], a_vec[-1]], color='k')
 			plt.pause(0.01)
 		plt.waitforbuttonpress()
-
-	def train_on_generator_validation_set(self, continue_training, data_gen, samples_per_epoch, nb_epoch, valid_data):
-		if continue_training:
-			filepath = self.substr + "-{epoch:02d}-{val_loss:.5f}.hdf5"
-			checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='auto')
-			earlyStopping = EarlyStopping(
-				monitor='val_loss',
-				patience=20
-			)
-			callbacks = [checkpoint, earlyStopping]
-
-			self.model.fit_generator(
-				generator=data_gen,
-				samples_per_epoch=samples_per_epoch,
-				nb_epoch=nb_epoch,
-				verbose=1,
-				validation_data=valid_data,
-				callbacks=callbacks
-			)

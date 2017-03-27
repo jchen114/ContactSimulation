@@ -58,11 +58,11 @@ else:
 	BaseClass = imp.load_source('BaseClass', data_path + '/BaseClass.py')
 
 
-class Slope_Ground_Predictor(BaseClass.Base_Model):
+class Network(BaseClass.Base_Model):
 
-	def __init__(self, lstm_layers, slope_dense_layers, ground_dense_layers, num_features, max_seq_length, save_substr):
+	def __init__(self, lstm_layers, slope_dense_layers, ground_dense_layers, num_features, max_seq_length, save_substr, dir='.'):
 
-		BaseClass.Base_Model.__init__(self, num_features, max_seq_length, save_substr)
+		BaseClass.Base_Model.__init__(self, num_features, max_seq_length, save_substr, dir)
 
 		if not self.loaded:
 			in_layer = Input(
@@ -125,7 +125,7 @@ class Slope_Ground_Predictor(BaseClass.Base_Model):
 					output_dim=1,
 					activation='linear'
 				),
-				name='ground_output'
+				name='compliance_output'
 			)(ground_layer)
 
 			self.model = Model(
@@ -200,7 +200,7 @@ class Slope_Ground_Predictor(BaseClass.Base_Model):
 				plt.pause(0.01)
 		plt.waitforbuttonpress()
 
-	def predict_on_data(self, data, slope_labels, ground_labels):
+	def predict_on_data(self, data, slope_labels, compliance_labels):
 
 		plt.ion()
 		plt.figure(1)
@@ -222,7 +222,7 @@ class Slope_Ground_Predictor(BaseClass.Base_Model):
 			slopes_actual = slope_labels[prediction]
 
 			compliances = ground_preds[prediction]
-			compliances_actual = ground_labels[prediction]
+			compliances_actual = compliance_labels[prediction]
 
 			plt.subplot(211)
 			plt.scatter(prediction, slopes[-1], c='b', alpha=0.6)

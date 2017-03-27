@@ -74,13 +74,14 @@ if __name__ == '__main__':
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='compliance_output',
-		save_substr='compliance_model'
+		save_substr='model',
+		dir='compliance'
 	)
 	#
 	# ================== TRAINING =================== #
 
 	compliance_network.train_on_generator_validation_set(
-		continue_training=False,
+		continue_training=True,
 		data_gen=compliance_data_gen,
 		samples_per_epoch=18100,
 		nb_epoch=40,
@@ -117,7 +118,7 @@ if __name__ == '__main__':
 	slope_labels, compliance_labels = DBI.split_labels(test_labels)
 
 	compliance_network.predict_on_data(
-		data=test_data[:4000],
-		labels=compliance_labels[:4000],
+		data=test_data[3000:5000],
+		labels=compliance_labels[3000:5000],
 		title='Compliance'
 	)
