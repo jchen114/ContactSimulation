@@ -19,7 +19,8 @@
 //std::string db_path = "..\\..\\Data\\samples_w_compliance_test.db";
 //std::string db_path = "..\\..\\Data\\samples_33.db";
 //std::string db_path = "..\\..\\Data\\samples_33_val.db";
-std::string db_path = "..\\..\\Data\\samples_33_test.db";
+//std::string db_path = "..\\..\\Data\\samples_33_test.db";
+std::string db_path = "..\\..\\Data\\samples_33_garbage.db";
 
 
 #include "sqlite3.h"

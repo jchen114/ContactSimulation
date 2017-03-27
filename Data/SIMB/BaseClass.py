@@ -25,7 +25,7 @@ class Histories(Callback):
 
 	def __init__(self, dir_name):
 		Callback.__init__(self)
-		self.fname = dir_name + 'Val_Losses'
+		self.fname = dir_name + '/val_losses'
 
 	def on_epoch_end(self, epoch, logs={}):
 		print('Save val loss')
@@ -43,7 +43,7 @@ class Base_Model:
 		self.substr = save_substr
 		self.num_features = num_features
 		self.max_seq_length = max_seq_length
-
+		self.dir = dir
 		files = [f for f in os.listdir(dir) if os.path.isfile(dir + '/' + f)]
 		self.loaded = False
 		for f in files:
