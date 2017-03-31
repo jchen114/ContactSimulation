@@ -69,13 +69,13 @@ if __name__ == '__main__':
 
 	compliance_network = LSTM_Model.Network(
 		lstm_layers=[128, 128],
-		dense_layers=[16],
+		dense_layers=[128],
 		num_features=45,
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='compliance_output',
-		save_substr='model',
-		dir='compliance'
+		save_substr='model-11',
+		dir='compliance/trial 2'
 	)
 	#
 	# ================== TRAINING =================== #
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		continue_training=True,
 		data_gen=compliance_data_gen,
 		samples_per_epoch=18100,
-		nb_epoch=40,
+		nb_epoch=2,
 		valid_data=(
 			{
 				'input_1': np.asarray(valid_data)

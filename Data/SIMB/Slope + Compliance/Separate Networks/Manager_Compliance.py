@@ -42,12 +42,6 @@ if __name__ == '__main__':
 	# Validation
 	valid_connection = DBI.initialize_db_connection('../../../samples_w_compliance_validation.db')
 	valid_connection.row_factory = DBI.dict_factory
-	slope_valid_gen = DBI.data_generator(
-		seq_length=30,
-		db_connection=valid_connection,
-		mode='normalize',
-		include_mode=1
-	)
 
 	compliance_valid_gen = DBI.data_generator(
 		seq_length=30,
@@ -58,19 +52,9 @@ if __name__ == '__main__':
 
 	# ========================== BUILD NETWORKS ========================= #
 
-	slope_network = LSTM_Model.Network(
-		lstm_layers=[128,128],
-		dense_layers=[16],
-		num_features=45,
-		num_outputs=1,
-		max_seq_length=30,
-		output_name='slope_output',
-		save_substr='slope_model'
-	)
-
 	compliance_network = LSTM_Model.Network(
 		lstm_layers=[128, 128],
-		dense_layers=[16],
+		dense_layers=[128],
 		num_features=45,
 		num_outputs=1,
 		max_seq_length=30,
@@ -79,14 +63,6 @@ if __name__ == '__main__':
 	)
 
 	# ================== TRAINING =================== #
-
-	slope_network.train_on_generator(
-		data_generator=slope_data_gen,
-		valid_generator=slope_valid_gen,
-		samples_per_epoch=2000,
-		nb_epoch=50,
-		continue_training=False
-	)
 
 	compliance_network.train_on_generator(
 		data_generator=compliance_data_gen,
