@@ -122,14 +122,36 @@ class Network(BaseClass.Base_Model):
 			x=data
 		)
 
+
+		errors = []
 		for prediction in range(0, len(predictions)):
 			p_vec = predictions[prediction]
 			a_vec = labels[prediction]
 
-			plt.subplot(111)
-			plt.scatter(prediction, p_vec[-1], c='b', alpha=0.6)
-			plt.scatter(prediction, a_vec[-1], c='r')
+			#
+			# plt.subplot(111)
+			# plt.scatter(prediction, p_vec[-1], c='b', alpha=0.6)
+			# plt.scatter(prediction, a_vec[-1], c='r')
+			#
+			# plt.plot([prediction, prediction], [p_vec[-1], a_vec[-1]], color='k')
 
-			plt.plot([prediction, prediction], [p_vec[-1], a_vec[-1]], color='k')
-			plt.pause(0.01)
-		plt.waitforbuttonpress()
+			errors.append(abs(a_vec[-1] - p_vec[-1]))
+
+		#plt.waitforbuttonpress()
+		#plt.show()
+
+		plt.figure(2)
+
+		plt.hist(
+			x=errors,
+			bins=20,
+			range=(0, 1),
+			normed=True
+		)
+		plt.xlabel('Errors')
+		plt.ylabel('Frequency')
+		plt.title('Histogram of Errors')
+		plt.show()
+
+
+

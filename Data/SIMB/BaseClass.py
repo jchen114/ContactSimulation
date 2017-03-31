@@ -107,7 +107,7 @@ class Base_Model:
 				patience=20
 			)
 
-			history = Histories('history')
+			history = Histories(self.dir)
 
 			callbacks = [checkpoint, earlyStopping, history]
 

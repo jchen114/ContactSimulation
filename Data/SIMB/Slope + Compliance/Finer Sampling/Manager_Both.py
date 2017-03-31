@@ -74,7 +74,7 @@ if __name__ == '__main__':
 		num_features=45,
 		max_seq_length=30,
 		save_substr='model',
-		dir='slope_compliance/trial 3'
+		dir='slope_compliance/trial 1'
 	)
 	#
 	# ================== TRAINING =================== #
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 		continue_training=True,
 		data_gen=compliance_data_gen,
 		samples_per_epoch=18000,
-		nb_epoch=23,
+		nb_epoch=40,
 		valid_data=(
 			{
 				'input_1': np.asarray(valid_data)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 	slope_labels, compliance_labels = DBI.split_labels(test_labels)
 
 	slope_compliance_network.predict_on_data(
-		data=test_data[3000:5000],
-		slope_labels=slope_labels[3000:5000],
-		compliance_labels=compliance_labels[3000:5000]
+		data=test_data,
+		slope_labels=slope_labels,
+		compliance_labels=compliance_labels
 	)

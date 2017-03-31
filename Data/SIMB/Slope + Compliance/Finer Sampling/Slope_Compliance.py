@@ -202,12 +202,6 @@ class Network(BaseClass.Base_Model):
 
 	def predict_on_data(self, data, slope_labels, compliance_labels):
 
-		plt.ion()
-		plt.figure(1)
-		plt.subplot(211)
-		plt.title('Slope')
-		plt.subplot(212)
-		plt.title('Compliance')
 
 		predictions = self.model.predict_on_batch(
 			x=data
@@ -216,28 +210,63 @@ class Network(BaseClass.Base_Model):
 		slope_preds = predictions[0]
 		ground_preds = predictions[1]
 
+		slope_errors = []
+		compliance_errors = []
+
+		# plt.ion()
+		# plt.figure(1)
+		# plt.subplot(211)
+		# plt.title('Slope')
+		# plt.subplot(212)
+		# plt.title('Compliance')
+
 		for prediction in range(0, len(slope_preds)):
 
 			slopes = slope_preds[prediction]
 			slopes_actual = slope_labels[prediction]
-
+			#
 			compliances = ground_preds[prediction]
 			compliances_actual = compliance_labels[prediction]
+			#
+			# plt.subplot(211)
+			# plt.scatter(prediction, slopes[-1], c='b', alpha=0.6)
+			# plt.scatter(prediction, slopes_actual[-1], c='r')
+			#
+			# plt.plot([prediction, prediction], [slopes[-1], slopes_actual[-1]], color='k')
+			#
+			# plt.subplot(212)
+			# plt.scatter(prediction, compliances[-1], c='b', alpha=0.6)
+			# plt.scatter(prediction, compliances_actual[-1], c='r')
+			#
+			# plt.plot([prediction, prediction], [compliances[-1], compliances_actual[-1]], color='k')
+			slope_errors.append(abs(slopes_actual[-1] - slopes[-1]))
+			compliance_errors.append(abs(compliances_actual[-1] - compliances[-1]))
 
-			plt.subplot(211)
-			plt.scatter(prediction, slopes[-1], c='b', alpha=0.6)
-			plt.scatter(prediction, slopes_actual[-1], c='r')
+		#plt.waitforbuttonpress()
+		#plt.show()
 
-			plt.plot([prediction, prediction], [slopes[-1], slopes_actual[-1]], color='k')
+		plt.figure(2)
+		plt.subplot(211)
+		plt.title('Slope Error Histogram')
+		plt.hist(
+			x=slope_errors,
+			bins=20,
+			normed=True
+		)
+		plt.xlabel('Errors')
+		plt.ylabel('Frequency')
+		plt.show()
 
-			plt.subplot(212)
-			plt.scatter(prediction, compliances[-1], c='b', alpha=0.6)
-			plt.scatter(prediction, compliances_actual[-1], c='r')
-
-			plt.plot([prediction, prediction], [compliances[-1], compliances_actual[-1]], color='k')
-
-			plt.pause(0.01)
-		plt.waitforbuttonpress()
+		plt.subplot(212)
+		plt.title('Compliance Error Histogram')
+		plt.hist(
+			x=compliance_errors,
+			bins=20,
+			normed=True
+		)
+		plt.xlabel('Errors')
+		plt.ylabel('Frequency')
+		plt.show()
 
 
 
