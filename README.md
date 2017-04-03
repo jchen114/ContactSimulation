@@ -1,4 +1,4 @@
-# Leveraging LSTM networks for slope and compliance 
+# Leveraging LSTM networks for Terrain Properties Prediction
 This is a physics based simulation developed in C++ using Bullet Physics and OpenGL. The bipedal walker is controlled using the strategy proposed by SIMBICON in this [paper](http://www.cs.ubc.ca/~van/papers/Simbicon.htm). Online demo of strategy [here](https://jchen114.github.io/SIMBICON-Web/)! Developed by me. 
 
 In the simulation, the bipedal walker tries to predict the slope and compliance that it is walking on. 
