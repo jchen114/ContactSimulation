@@ -3,7 +3,7 @@ from numpy import newaxis
 import numpy as np
 from keras.models import Model
 from keras.layers import Input
-from keras.layers.core import Dense, Activation, Dropout, Masking, Reshape, TimeDistributedDense, Merge
+from keras.layers.core import Dense, Activation, Dropout, Masking, Reshape
 from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import TimeDistributed
 from keras.layers.pooling import  AveragePooling1D
@@ -75,11 +75,11 @@ class Network(BaseClass.Base_Model):
 			# LSTM Layers Common layers
 			for layer in lstm_layers:
 				common_layer = LSTM(
-					output_dim=layer,
+					units=layer,
 					return_sequences=True
 				)(common_layer)
 				common_layer = Dropout(
-					p=0.2
+					rate=0.2
 				)(common_layer)
 
 			slope_layer = common_layer
@@ -91,30 +91,30 @@ class Network(BaseClass.Base_Model):
 			for layer in slope_dense_layers:
 				slope_layer = TimeDistributed (
 					Dense (
-						output_dim=layer,
+						units=layer,
 						activation='relu'
 					)
 				)(slope_layer)
 				slope_layer = Dropout(
-					p=0.2
+					rate=0.2
 				)(slope_layer)
 
 			# Ground Properties
 			for layer in ground_dense_layers:
 				ground_layer = TimeDistributed (
 					Dense (
-						output_dim=layer,
+						units=layer,
 						activation='relu'
 					)
 				)(ground_layer)
 				ground_layer = Dropout (
-					p=0.2
+					rate=0.2
 				)(ground_layer)
 
 			# Output layers
 			slope_output = TimeDistributed(
 				Dense (
-					output_dim=1,
+					units=1,
 					activation='linear'
 				),
 				name='slope_output'
@@ -122,15 +122,15 @@ class Network(BaseClass.Base_Model):
 
 			ground_output = TimeDistributed(
 				Dense (
-					output_dim=1,
+					units=1,
 					activation='linear'
 				),
 				name='compliance_output'
 			)(ground_layer)
 
 			self.model = Model(
-				input=[in_layer],
-				output=[slope_output, ground_output]
+				inputs=[in_layer],
+				outputs=[slope_output, ground_output]
 			)
 
 			start = time.time()

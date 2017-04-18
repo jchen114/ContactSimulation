@@ -74,7 +74,7 @@ if __name__ == '__main__':
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='compliance_output',
-		save_substr='model',
+		save_substr='model-25',
 		dir='compliance/trial 3'
 	)
 	#
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		continue_training=True,
 		data_gen=compliance_data_gen,
 		samples_per_epoch=18100,
-		nb_epoch=26,
+		nb_epoch=14,
 		valid_data=(
 			{
 				'input_1': np.asarray(valid_data)

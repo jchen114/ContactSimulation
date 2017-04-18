@@ -65,7 +65,7 @@ if __name__ == '__main__':
 	slope_labels, compliance_labels = DBI.split_labels(valid_labels)
 
 	# # ========================== BUILD NETWORKS ========================= #
-	#
+
 	slope_network = LSTM_Model.Network(
 		lstm_layers=[128,128],
 		dense_layers=[16],
@@ -73,17 +73,17 @@ if __name__ == '__main__':
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='slope_output',
-		save_substr='model',
-		dir='slope'
+		save_substr='model-21',
+		dir='slope/trial 2'
 	)
-	#
+
 	# ================== TRAINING =================== #
 
 	slope_network.train_on_generator_validation_set(
 		continue_training=True,
 		data_gen=slope_data_gen,
 		samples_per_epoch=18100,
-		nb_epoch=40,
+		nb_epoch=18,
 		valid_data=(
 			{
 				'input_1': np.asarray(valid_data)
@@ -97,29 +97,29 @@ if __name__ == '__main__':
 	#
 	# # ==================== TESTING =================== #
 	#
-	test_data, test_labels, foot_forces = DBI.prepare_data(
-		db_str='../../../samples_33_val.db',
-		num_seq=None,
-		mode='normalize',
-		include_forces=True,
-		dump=False
-	)
-
-	lf_forces = foot_forces[0]
-	rf_forces = foot_forces[1]
-
-	lf_forces = DBI.avg_down_foot_forces(lf_forces)
-	rf_forces = DBI.avg_down_foot_forces(rf_forces)
-
-	forces = np.concatenate((lf_forces, rf_forces), 2)
-
-	test_data = np.concatenate((test_data, forces), 2)
-
-	slope_labels, compliance_labels = DBI.split_labels(test_labels)
-
-	slope_network.predict_on_data(
-		data=test_data[3000:5000],
-		labels = slope_labels[3000:5000],
-		title='Slopes'
-	)
+	# test_data, test_labels, foot_forces = DBI.prepare_data(
+	# 	db_str='../../../samples_33_val.db',
+	# 	num_seq=None,
+	# 	mode='normalize',
+	# 	include_forces=True,
+	# 	dump=False
+	# )
+	#
+	# lf_forces = foot_forces[0]
+	# rf_forces = foot_forces[1]
+	#
+	# lf_forces = DBI.avg_down_foot_forces(lf_forces)
+	# rf_forces = DBI.avg_down_foot_forces(rf_forces)
+	#
+	# forces = np.concatenate((lf_forces, rf_forces), 2)
+	#
+	# test_data = np.concatenate((test_data, forces), 2)
+	#
+	# slope_labels, compliance_labels = DBI.split_labels(test_labels)
+	#
+	# slope_network.predict_on_data(
+	# 	data=test_data[3000:5000],
+	# 	labels = slope_labels[3000:5000],
+	# 	title='Slopes'
+	# )
 

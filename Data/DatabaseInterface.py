@@ -327,7 +327,7 @@ def prepare_data(db_str, num_seq=None, mode='difference', include_forces=False, 
 	return xs, ys, foot_forces
 
 
-def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sample_size=32, include_compliance=True, include_mode=0):
+def data_generator(seq_length, db_connection, mode='normalize', max_seq_length = 30, avg_window=4, sample_size=32, include_compliance=True, include_mode=0):
 	num_sequences = get_number_of_sequences(db_connection)['MAX(SEQUENCE_ID)']
 	# Get the size for each sequence?
 	sizes = list()
@@ -374,9 +374,17 @@ def data_generator(seq_length, db_connection, mode='normalize', avg_window=4, sa
 					forces = np.concatenate((l_f, r_f), axis=2)  # Concatenate the forces
 					inputs = np.concatenate((x, forces), axis=2)
 				slope_target, ground_target = split_targets(y[0])
-				sample.extend(inputs)
-				slope_targets.append(slope_target)
-				ground_targets.append(ground_target)
+				slope_target = np.array(slope_target)
+				ground_target = np.array(ground_target)
+				datum = np.zeros(shape=(max_seq_length, inputs.shape[2]))
+				datum[:seq_length] = inputs[:]
+				sample.append(datum)
+				slope_y = np.zeros(shape=(max_seq_length, slope_target.shape[1]))
+				slope_y[:seq_length] = slope_target[:]
+				slope_targets.append(slope_y)
+				ground_y = np.zeros(shape=(max_seq_length, 1))
+				ground_y[:seq_length] = ground_target[:]
+				ground_targets.append(ground_y)
 		if include_mode == 0:
 			yield (
 				{
@@ -470,7 +478,7 @@ if __name__ == "__main__":
 	db_connection = initialize_db_connection("samples_w_compliance.db")
 	db_connection.row_factory = dict_factory
 	generator = data_generator(
-		seq_length=30,
+		seq_length=15,
 		db_connection=db_connection,
 		mode='normalize',
 		avg_window=4,
