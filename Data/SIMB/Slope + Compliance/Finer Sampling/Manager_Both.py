@@ -33,7 +33,7 @@ if __name__ == '__main__':
 	data_connection.row_factory = DBI.dict_factory
 
 	data_gen = DBI.data_generator(
-		seq_length=7,
+		seq_length=3,
 		db_connection=data_connection,
 		mode='normalize',
 		include_mode=0
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 		num_features=45,
 		max_seq_length=30,
 		save_substr='model',
-		dir='varying_window/7/trial 1'
+		dir='varying_window/3/trial 1'
 	)
 	#
 	# ================== TRAINING =================== #
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 	slope_compliance_network.train_on_generator_validation_set(
 		continue_training=True,
 		data_gen=data_gen,
-		steps_per_epoch=563,
+		samples_per_epoch=18000,
 		nb_epoch=20,
 		valid_data=(
 			{

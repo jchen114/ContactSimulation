@@ -98,7 +98,7 @@ class Base_Model:
 			callbacks=callbacks
 		)
 
-	def train_on_generator_validation_set(self, continue_training, data_gen, steps_per_epoch, nb_epoch, valid_data):
+	def train_on_generator_validation_set(self, continue_training, data_gen, samples_per_epoch, nb_epoch, valid_data):
 		if continue_training:
 			filepath = self.substr + "-{epoch:02d}-{val_loss:.5f}.hdf5"
 			checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='auto')
@@ -113,7 +113,7 @@ class Base_Model:
 
 			self.model.fit_generator(
 				generator=data_gen,
-				steps_per_epoch=steps_per_epoch,
+				samples_per_epoch=samples_per_epoch,
 				nb_epoch=nb_epoch,
 				verbose=1,
 				validation_data=valid_data,

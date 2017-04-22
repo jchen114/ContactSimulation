@@ -112,46 +112,28 @@ class Network(BaseClass.Base_Model):
 			print('model.outputs: ')
 			print(self.model.output_shape)
 
-	def predict_on_data(self, data, labels, title):
-		plt.ion()
-		plt.figure(1)
-		plt.subplot(111)
-		plt.title(title)
+	def predict_on_data(self, data):
 
 		predictions = self.model.predict_on_batch(
 			x=data
 		)
 
+		return predictions
 
-		errors = []
-		for prediction in range(0, len(predictions)):
-			p_vec = predictions[prediction]
-			a_vec = labels[prediction]
-
-			#
-			# plt.subplot(111)
-			# plt.scatter(prediction, p_vec[-1], c='b', alpha=0.6)
-			# plt.scatter(prediction, a_vec[-1], c='r')
-			#
-			# plt.plot([prediction, prediction], [p_vec[-1], a_vec[-1]], color='k')
-
-			errors.append(abs(a_vec[-1] - p_vec[-1]))
-
-		#plt.waitforbuttonpress()
-		#plt.show()
-
-		plt.figure(2)
-
-		plt.hist(
-			x=errors,
-			bins=20,
-			range=(0, 1),
-			normed=True
-		)
-		plt.xlabel('Errors')
-		plt.ylabel('Frequency')
-		plt.title('Histogram of Errors')
-		plt.show()
+		# errors = []
+		# for prediction in range(0, len(predictions)):
+		# 	p_vec = predictions[prediction]
+		# 	a_vec = labels[prediction]
+		#
+		#
+		# 	plt.subplot(111)
+		# 	plt.scatter(prediction, p_vec[-1], c='b', alpha=0.6)
+		# 	plt.scatter(prediction, a_vec[-1], c='r')
+		#
+		# 	plt.plot([prediction, prediction], [p_vec[-1], a_vec[-1]], color='k')
+		#
+		# 	errors.append(abs(a_vec[-1] - p_vec[-1]))
+		#
 
 
 
