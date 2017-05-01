@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
 	slope_network = LSTM_Model.Network(
 		lstm_layers=[128,128],
-		dense_layers=[16],
+		dense_layers=[128],
 		num_features=45,
 		num_outputs=1,
 		max_seq_length=30,

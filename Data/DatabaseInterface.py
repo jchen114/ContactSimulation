@@ -327,7 +327,14 @@ def prepare_data(db_str, num_seq=None, mode='difference', include_forces=False, 
 	return xs, ys, foot_forces
 
 
-def data_generator(seq_length, db_connection, mode='normalize', max_seq_length = 30, avg_window=4, sample_size=32, include_compliance=True, include_mode=0):
+def data_generator(seq_length,
+				   db_connection,
+				   max_seq_length = 30,
+				   avg_window=4,
+				   sample_size=32,
+				   input_mode=0,
+				   include_mode=0
+				   ):
 	num_sequences = get_number_of_sequences(db_connection)['MAX(SEQUENCE_ID)']
 	# Get the size for each sequence?
 	sizes = list()
@@ -351,28 +358,22 @@ def data_generator(seq_length, db_connection, mode='normalize', max_seq_length =
 				# Start from random index in state_ids
 				start_idx = np.random.randint(low=0, high=len(state_ids) - seq_length)
 				state_ids = state_ids[start_idx:start_idx + seq_length]
-				if mode == 'difference':
-					data, labels, forces = get_differenced_states_from_state_ids(
-						db_connection,
-						state_ids,
-						forces=True
-					)
-					x, y = prepare_data_for_sequences(data, labels, seq_length=seq_length - 1, full_sequence=True)
-					l_f, r_f = prepare_forces_sequences(forces, seq_length=seq_length - 1)
-				elif mode == 'normalize':
-					data, labels, forces = get_normalized_states_from_state_ids(
-						db_connection,
-						state_ids,
-						forces=True
-					)
-					x, y = prepare_data_for_sequences(data, labels, seq_length=seq_length, full_sequence=True)
-					l_f, r_f = prepare_forces_sequences(forces, seq_length=seq_length)
-				inputs = x
-				if include_compliance:
-					l_f = avg_down_foot_forces(l_f, avg_window=avg_window)
-					r_f = avg_down_foot_forces(r_f, avg_window=avg_window)
-					forces = np.concatenate((l_f, r_f), axis=2)  # Concatenate the forces
+				data, labels, forces = get_normalized_states_from_state_ids(
+					db_connection,
+					state_ids,
+					forces=True
+				)
+				x, y = prepare_data_for_sequences(data, labels, seq_length=seq_length, full_sequence=True)
+				l_f, r_f = prepare_forces_sequences(forces, seq_length=seq_length)
+				l_f = avg_down_foot_forces(l_f, avg_window=avg_window)
+				r_f = avg_down_foot_forces(r_f, avg_window=avg_window)
+				forces = np.concatenate((l_f, r_f), axis=2)  # Concatenate the forces
+				if input_mode == 0:
 					inputs = np.concatenate((x, forces), axis=2)
+				elif input_mode == 1: # No Forces
+					inputs = np.asarray(x)
+				elif input_mode == 2: # No State
+					inputs = np.asarray(forces)
 				slope_target, ground_target = split_targets(y[0])
 				slope_target = np.array(slope_target)
 				ground_target = np.array(ground_target)
@@ -478,14 +479,13 @@ if __name__ == "__main__":
 	db_connection = initialize_db_connection("samples_w_compliance.db")
 	db_connection.row_factory = dict_factory
 	generator = data_generator(
-		seq_length=15,
+		seq_length=30,
 		db_connection=db_connection,
-		mode='normalize',
-		avg_window=4,
-		sample_size=5
+		input_mode=2
 	)
 
-	next(generator)
+	for _ in range(0, 3):
+		next(generator)
 
 	# v_db_connection = initialize_db_connection('samples_w_compliance_validation.db')
 	# v_db_connection.row_factory = dict_factory

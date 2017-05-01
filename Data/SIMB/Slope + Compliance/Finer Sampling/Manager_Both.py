@@ -32,11 +32,12 @@ if __name__ == '__main__':
 	data_connection = DBI.initialize_db_connection('../../../samples_33.db')
 	data_connection.row_factory = DBI.dict_factory
 
+	input_mode=2
+
 	data_gen = DBI.data_generator(
-		seq_length=3,
+		seq_length=30,
 		db_connection=data_connection,
-		mode='normalize',
-		include_mode=0
+		input_mode=input_mode
 	)
 
 	# Validation
@@ -61,7 +62,13 @@ if __name__ == '__main__':
 
 	forces = np.concatenate((lf_forces, rf_forces), 2)
 
-	valid_data = np.concatenate((valid_data, forces), 2)
+	if input_mode == 0:
+		valid_data = np.concatenate((valid_data, forces), 2)
+	elif input_mode == 1:
+		valid_data = np.asarray(valid_data)
+	elif input_mode == 2:
+		valid_data = forces
+
 
 	slope_labels, compliance_labels = DBI.split_labels(valid_labels)
 
@@ -71,10 +78,10 @@ if __name__ == '__main__':
 		lstm_layers=[128, 128],
 		slope_dense_layers=[128],
 		ground_dense_layers=[128],
-		num_features=45,
+		num_features=22,
 		max_seq_length=30,
 		save_substr='model',
-		dir='varying_window/3/trial 1'
+		dir='No State/trial 1'
 	)
 	#
 	# ================== TRAINING =================== #
@@ -97,28 +104,28 @@ if __name__ == '__main__':
 
 	# # ==================== TESTING =================== #
 	#
-	test_data, test_labels, foot_forces = DBI.prepare_data(
-		db_str='../../../samples_33_test.db',
-		num_seq=None,
-		mode='normalize',
-		include_forces=True,
-		dump=False
-	)
-
-	lf_forces = foot_forces[0]
-	rf_forces = foot_forces[1]
-
-	lf_forces = DBI.avg_down_foot_forces(lf_forces)
-	rf_forces = DBI.avg_down_foot_forces(rf_forces)
-
-	forces = np.concatenate((lf_forces, rf_forces), 2)
-
-	test_data = np.concatenate((test_data, forces), 2)
-
-	slope_labels, compliance_labels = DBI.split_labels(test_labels)
-
-	slope_compliance_network.predict_on_data(
-		data=test_data,
-		slope_labels=slope_labels,
-		compliance_labels=compliance_labels
-	)
+	# test_data, test_labels, foot_forces = DBI.prepare_data(
+	# 	db_str='../../../samples_33_test.db',
+	# 	num_seq=None,
+	# 	mode='normalize',
+	# 	include_forces=True,
+	# 	dump=False
+	# )
+	#
+	# lf_forces = foot_forces[0]
+	# rf_forces = foot_forces[1]
+	#
+	# lf_forces = DBI.avg_down_foot_forces(lf_forces)
+	# rf_forces = DBI.avg_down_foot_forces(rf_forces)
+	#
+	# forces = np.concatenate((lf_forces, rf_forces), 2)
+	#
+	# test_data = np.concatenate((test_data, forces), 2)
+	#
+	# slope_labels, compliance_labels = DBI.split_labels(test_labels)
+	#
+	# slope_compliance_network.predict_on_data(
+	# 	data=test_data,
+	# 	slope_labels=slope_labels,
+	# 	compliance_labels=compliance_labels
+	# )

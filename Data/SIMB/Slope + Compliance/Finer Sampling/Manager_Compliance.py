@@ -74,7 +74,7 @@ if __name__ == '__main__':
 		num_outputs=1,
 		max_seq_length=30,
 		output_name='compliance_output',
-		save_substr='model-25',
+		save_substr='test',
 		dir='compliance/trial 3'
 	)
 	#
