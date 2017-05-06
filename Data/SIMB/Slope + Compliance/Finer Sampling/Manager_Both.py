@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
 	slope_labels, compliance_labels = DBI.split_labels(valid_labels)
 
-	# # ========================== BUILD NETWORKS ========================= #
+	# ========================== BUILD NETWORKS ========================= #
 
 	slope_compliance_network = Slope_Compliance.Network(
 		lstm_layers=[128, 128],
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 		num_features=22,
 		max_seq_length=30,
 		save_substr='model',
-		dir='No State/trial 1'
+		dir='No State/trial 2'
 	)
 	#
 	# ================== TRAINING =================== #
@@ -102,8 +102,8 @@ if __name__ == '__main__':
 		),
 	)
 
-	# # ==================== TESTING =================== #
-	#
+	# ==================== TESTING =================== #
+
 	# test_data, test_labels, foot_forces = DBI.prepare_data(
 	# 	db_str='../../../samples_33_test.db',
 	# 	num_seq=None,
@@ -122,8 +122,10 @@ if __name__ == '__main__':
 	#
 	# test_data = np.concatenate((test_data, forces), 2)
 	#
+	# pickle.dump(test_data, open('test_data.p', 'wb'))
+
 	# slope_labels, compliance_labels = DBI.split_labels(test_labels)
-	#
+
 	# slope_compliance_network.predict_on_data(
 	# 	data=test_data,
 	# 	slope_labels=slope_labels,

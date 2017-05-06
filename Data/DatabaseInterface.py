@@ -130,6 +130,7 @@ def vectorize_state(state, means, variances, include_forces=False):
 			or k == 'GROUND_STIFFNESS':
 			continue
 		feature = float(state[k])
+		# print('k: ' + k)
 		if means and variances:
 			feature = standardize_data(feature, means[k], variances[k])
 		vector.append(feature)
@@ -474,18 +475,18 @@ def unstandardize_data(data, mean, variance):
 
 if __name__ == "__main__":
 
-	#prepare_data('samples_w_compliance_test.db', num_seq=30, difference=True, include_forces=True)
+	prepare_data('samples_33.db', num_seq=30, mode='normalize', include_forces=True, dump=False)
 
-	db_connection = initialize_db_connection("samples_w_compliance.db")
-	db_connection.row_factory = dict_factory
-	generator = data_generator(
-		seq_length=30,
-		db_connection=db_connection,
-		input_mode=2
-	)
-
-	for _ in range(0, 3):
-		next(generator)
+	# db_connection = initialize_db_connection("samples_w_compliance.db")
+	# db_connection.row_factory = dict_factory
+	# generator = data_generator(
+	# 	seq_length=30,
+	# 	db_connection=db_connection,
+	# 	input_mode=2
+	# )
+	#
+	# for _ in range(0, 3):
+	# 	next(generator)
 
 	# v_db_connection = initialize_db_connection('samples_w_compliance_validation.db')
 	# v_db_connection.row_factory = dict_factory

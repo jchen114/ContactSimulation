@@ -358,42 +358,44 @@ def generate_slope_plots():
 
 def generate_slope_compliance_plots():
 	# Validation graphs
-	val_losses_trial_1 = pickle.load(open('slope_compliance/trial 1/val_losses.p', 'rb'))
-	val_losses_trial_2 = pickle.load(open('slope_compliance/trial 2/val_losses.p', 'rb'))
-	val_losses_trial_3 = pickle.load(open('slope_compliance/trial 3/val_losses.p', 'rb'))
-	plot_validation_errors('Slope + Compliance Validation Losses vs Epoch',
-						   [val_losses_trial_1, val_losses_trial_2, val_losses_trial_3])
+	# val_losses_trial_1 = pickle.load(open('slope_compliance/trial 1/val_losses.p', 'rb'))
+	# val_losses_trial_2 = pickle.load(open('slope_compliance/trial 2/val_losses.p', 'rb'))
+	# val_losses_trial_3 = pickle.load(open('slope_compliance/trial 3/val_losses.p', 'rb'))
+	# plot_validation_errors('Slope + Compliance Validation Losses vs Epoch',
+	# 					   [val_losses_trial_1, val_losses_trial_2, val_losses_trial_3])
+	#
+	model_file = 'slope_compliance/trial 1/model-35-0.04533.hdf5'
 
-	# model_file = 'slope_compliance/trial 1/model-35-0.04533.hdf5'
-	#
-	# # Test Prediction
-	#
-	# test_data, test_labels, foot_forces = DBI.prepare_data(
-	# 	db_str='../../../samples_33_test.db',
-	# 	num_seq=None,
-	# 	mode='normalize',
-	# 	include_forces=True,
-	# 	dump=False
-	# )
-	#
-	# lf_forces = foot_forces[0]
-	# rf_forces = foot_forces[1]
-	#
-	# lf_forces = DBI.avg_down_foot_forces(lf_forces)
-	# rf_forces = DBI.avg_down_foot_forces(rf_forces)
-	#
-	# forces = np.concatenate((lf_forces, rf_forces), 2)
-	#
-	# test_data = np.concatenate((test_data, forces), 2)
-	#
-	# slope_labels, compliance_labels = DBI.split_labels(test_labels)
-	#
-	# plot_multiple_test_predictions(
-	# 	model_file=model_file,
-	# 	input_data=test_data,
-	# 	slope_labels=slope_labels,
-	# 	compliance_labels=compliance_labels,
-	# )
+	# Test Prediction
+
+	test_data, test_labels, foot_forces = DBI.prepare_data(
+		db_str='../../../samples_33_test.db',
+		num_seq=None,
+		mode='normalize',
+		include_forces=True,
+		dump=False
+	)
+
+	lf_forces = foot_forces[0]
+	rf_forces = foot_forces[1]
+
+	lf_forces = DBI.avg_down_foot_forces(lf_forces)
+	rf_forces = DBI.avg_down_foot_forces(rf_forces)
+
+	forces = np.concatenate((lf_forces, rf_forces), 2)
+
+	test_data = np.concatenate((test_data, forces), 2)
+
+	slope_labels, compliance_labels = DBI.split_labels(test_labels)
+
+	plot_multiple_test_predictions(
+		model_file=model_file,
+		input_data=test_data,
+		slope_labels=slope_labels,
+		compliance_labels=compliance_labels,
+		starting_idx=0,
+		end_idx=160
+	)
 
 	# Error Histogram
 	# plot_multiple_test_histogram_errors(
@@ -506,11 +508,11 @@ def generate_varying_window_plots(window_size):
 
 if __name__ == '__main__':
 	# compliance
-	generate_compliance_plots()
+	#generate_compliance_plots()
 	# slope
-	generate_slope_plots()
+#	#generate_slope_plots()
 	# slope + compliance
-	#generate_slope_compliance_plots()
+	generate_slope_compliance_plots()
 	# slope + compliance hp
 	#generate_slope_compliance_hp_plots()
 	# varying window
