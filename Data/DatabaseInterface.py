@@ -475,7 +475,7 @@ def unstandardize_data(data, mean, variance):
 
 if __name__ == "__main__":
 
-	prepare_data('samples_33.db', num_seq=30, mode='normalize', include_forces=True, dump=False)
+	#prepare_data('samples_33.db', num_seq=30, mode='normalize', include_forces=True, dump=False)
 
 	# db_connection = initialize_db_connection("samples_w_compliance.db")
 	# db_connection.row_factory = dict_factory
@@ -500,3 +500,11 @@ if __name__ == "__main__":
 	# for i in range(0, 4):
 	# 	next(generator)
 	# 	next(valid_gen)
+
+	means = pickle.load(open('means.p', 'rb'))
+	variances = pickle.load(open('variances.p', 'rb'))
+
+	scale_s = 0.1 * np.sqrt(variances['GROUND_SLOPE'])
+	scale_c = 0.1 * np.sqrt(variances['GROUND_STIFFNESS'])
+
+	print('Scale (slope, compliance) = ({0}, {1})'.format(scale_s, scale_c))

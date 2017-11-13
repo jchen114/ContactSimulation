@@ -81,7 +81,7 @@ if __name__ == '__main__':
 		num_features=22,
 		max_seq_length=30,
 		save_substr='model',
-		dir='No State/trial 2'
+		dir='No State/trial 3'
 	)
 	#
 	# ================== TRAINING =================== #
